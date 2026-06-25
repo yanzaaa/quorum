@@ -55,6 +55,15 @@ Two things make the *multi-agent* layer do real work, not just dress up a guardr
 
 The safety property is unit-tested: **25 Vitest tests** (`npm test`) pin the quorum invariants — no execution without unanimity; a split vote escalates; a unanimous approval of a high-stakes, irreversible, low-confidence, or flagged action is **held back** (including when the models report *zero* risk flags, proving model output can't relax the gate); a unanimous rejection is auto-denied; an escalate/reject is never upgraded to an execute (the one-way ratchet); the low-stakes abuse pattern is caught by agent reasoning; the single-agent baseline is measured; and the model-parsing seam fails closed on malformed output. See [`tests/quorum.test.ts`](tests/quorum.test.ts) and [`tests/deliberate.test.ts`](tests/deliberate.test.ts).
 
+## Use it as an MCP server
+
+The council is exposed to any MCP client (Claude Desktop, Cursor, or another agent) over stdio — run `npm run mcp` ([`mcp-server.ts`](mcp-server.ts)). Two tools:
+
+- `convene_council` — submit a consequential action; the three agents deliberate and the guardrail returns execute / reject / escalate, with every vote, the held-back flag, and the single-agent baseline.
+- `list_demo_actions` — list the built-in demo queue.
+
+The point: an *agent society* can consult Quorum before acting. Another agent submitting "wire $50k from an emailed invoice" gets it **rejected by the council** — and even on an action all three approve, the guardrail still won't let an external caller execute the irreversible. The restraint travels with the council, not the caller.
+
 ## Run it locally
 
 ```bash
