@@ -6,6 +6,8 @@ Most "multi-agent" demos let a swarm of agents talk themselves into an action. T
 
 **Quorum is a council of Qwen agents that deliberates every consequential action, and a deterministic guardrail that refuses to execute without consensus and refuses to let any consensus authorize the irreversible.** It executes the clearly-safe, auto-denies the clearly-bad, and escalates the rest to a human.
 
+![Quorum architecture](public/architecture.png)
+
 ## What it does
 
 For each proposed action, three Qwen agents each cast an independent vote:
