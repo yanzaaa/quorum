@@ -27,7 +27,8 @@ Screen-record the page. Speak the **bold** lines; the cues in (parens) are what 
 > **"A unanimous, fully-authorized council still doesn't get to pull an irreversible trigger without a human. Consensus is necessary — but never sufficient."**
 
 **[1:52 — point at the headline metric near the top of the results]**
-> **"Up here: a lone agent would have executed several of these on its own. The council stopped every one — the measurable gain over a single agent."**
+> **"Up here's the measurable part: a lone agent would have executed [read the number on screen] of these on its own — and the council stopped every one. That's the gain over a single agent."**
+(The exact number varies per run — just read whatever it shows; qwen-max is cautious so it's often 1–2.)
 
 **[2:08 — close]**
 > **"It's a real three-agent loop on Qwen Cloud, with a deterministic guardrail that can only ever make the outcome safer. A society of agents that's safe because no vote — not even a unanimous one — can authorize the irreversible. That's Quorum."**

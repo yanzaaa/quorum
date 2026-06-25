@@ -3,7 +3,7 @@
 :root {
   --bg: #090d1c;         /* deliberation-chamber navy (cooler + distinct from the aurora elsewhere) */
   --ink: #eef1fb;
-  --mut: #99a1c2;
+  --mut: #aeb6d4;
   --acc: #8aa0ff;        /* brand: periwinkle indigo (the council) */
   --acc2: #5fe6ff;       /* referee cyan / held-back */
   --approve: #43e5a0;    /* proposer · execute (mint) */
@@ -126,12 +126,12 @@ html, body {
 /* ---------- magnetic button ---------- */
 .qr-btn {
   display: inline-flex; align-items: center; gap: 12px;
-  background: linear-gradient(180deg, #bcd2ff, #7d97f2); color: #0a1230;
+  background: linear-gradient(180deg, #8ee7f1, #4fbfdb); color: #06212b;
   border: 0; border-radius: 999px; padding: 11px 13px 11px 22px; font-weight: 700; font-size: 15px; cursor: pointer;
-  box-shadow: 0 10px 30px -10px rgba(125, 151, 242, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  box-shadow: 0 10px 30px -10px rgba(79, 191, 219, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease), filter 0.2s;
 }
-.qr-btn:hover { box-shadow: 0 16px 42px -12px rgba(125, 151, 242, 0.68), inset 0 1px 0 rgba(255, 255, 255, 0.42); }
+.qr-btn:hover { box-shadow: 0 16px 42px -12px rgba(79, 191, 219, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.45); }
 .qr-btn:active { transform: scale(0.97); }
 .qr-btn:disabled { opacity: 0.5; cursor: default; }
 .qr-btn .ico {
@@ -166,7 +166,7 @@ html, body {
 .qr-solo-exec { color: var(--red); font-weight: 700; }
 .qr-solo-decline { color: var(--mut); font-weight: 600; }
 .qr-caught { color: var(--approve); font-weight: 700; font-size: 11px; border: 1px solid rgba(67, 229, 160, 0.4); background: rgba(67, 229, 160, 0.08); border-radius: 999px; padding: 1px 9px; }
-.qr-revised { color: var(--acc2); font-weight: 600; font-size: 11px; }
+.qr-revised { color: var(--amber); font-weight: 700; font-size: 10.5px; border: 1px solid rgba(244, 185, 66, 0.4); background: rgba(244, 185, 66, 0.1); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
 .qr-headline { border: 1px solid var(--hair); background: linear-gradient(180deg, rgba(138,160,255,0.10), rgba(95,230,255,0.03)); border-radius: 14px; padding: 14px 18px; font-size: 15px; color: var(--ink); }
 .qr-headline b { color: var(--acc); font-variant-numeric: tabular-nums; }
 .qr-legend { display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--mut); }

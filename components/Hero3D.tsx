@@ -61,7 +61,7 @@ function Council() {
     if (core.current && coreMat.current) {
       core.current.rotation.x = t * 0.28;
       core.current.rotation.y = t * 0.2;
-      tmp.copy(CORE_BASE).lerp(contested ? GOLD : GREEN, ruling * 0.85);
+      tmp.copy(CORE_BASE).lerp(contested ? GOLD : GREEN, ruling * 0.85).lerp(GOLD, 0.08);
       coreMat.current.emissive.copy(tmp);
       coreMat.current.emissiveIntensity = 0.5 + ruling * 1.7;
       core.current.scale.setScalar(0.4 + ruling * 0.07);

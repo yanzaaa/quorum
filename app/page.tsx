@@ -79,7 +79,7 @@ function DecisionBody({ d }: { d: QuorumDecision }) {
             <span className="qr-num text-[11px] text-[var(--mut)] w-[30px] shrink-0">{Math.round(o.confidence * 100)}%</span>
             <span className="text-[12.5px] text-[#cdd6e3] flex-1">
               {o.reasoning}
-              {o.revisedFrom && <span className="qr-revised"> ↺ changed from {o.revisedFrom} after the skeptic</span>}
+              {o.revisedFrom && <>{" "}<span className="qr-revised">↺ changed from {o.revisedFrom} after the skeptic</span></>}
             </span>
           </div>
         ))}
