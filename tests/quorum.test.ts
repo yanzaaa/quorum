@@ -99,8 +99,8 @@ describe("fallbackDeliberate — end-to-end over the demo queue", () => {
     expect(d.consensus).toBe(false);
   });
 
-  it("escalates the suspicious $50k wire", () => {
-    expect(byId("A-03").outcome).toBe("escalate");
+  it("withholds the suspicious $50k wire (the Proposer concedes to the Skeptic; council rejects)", () => {
+    expect(byId("A-03").outcome).toBe("reject");
   });
 
   it("auto-rejects the database deletion", () => {
@@ -129,6 +129,21 @@ describe("fallbackDeliberate — end-to-end over the demo queue", () => {
     const d = fallbackDeliberate(QUEUE.find((a) => a.id === "A-07")!);
     expect(d.outcome).not.toBe("execute");
     expect(d.approvals).toBeLessThan(3);
+  });
+
+  it("the Proposer CHANGES its vote after the Skeptic on a decisive objection (emergent negotiation)", () => {
+    const d = fallbackDeliberate(QUEUE.find((a) => a.id === "A-07")!);
+    const prop = d.opinions.find((o) => o.role === "proposer")!;
+    expect(prop.revisedFrom).toBe("approve");
+    expect(prop.vote).toBe("reject");
+  });
+
+  it("the Proposer HOLDS its ground on a genuinely contested (not clearly dangerous) call, so the split stands", () => {
+    const d = fallbackDeliberate(QUEUE.find((a) => a.id === "A-02")!);
+    const prop = d.opinions.find((o) => o.role === "proposer")!;
+    expect(prop.revisedFrom).toBeUndefined();
+    expect(d.outcome).toBe("escalate");
+    expect(d.consensus).toBe(false);
   });
 });
 

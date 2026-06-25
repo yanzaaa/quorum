@@ -51,7 +51,7 @@ Two things make the *multi-agent* layer do real work, not just dress up a guardr
 
 ## Tests
 
-The safety property is unit-tested: **22 Vitest tests** (`npm test`) pin the quorum invariants — no execution without unanimity; a split vote escalates; a unanimous approval of a high-stakes, irreversible, low-confidence, or flagged action is **held back** (including when the models report *zero* risk flags, proving model output can't relax the gate); a unanimous rejection is auto-denied; an escalate/reject is never upgraded to an execute (the one-way ratchet); the low-stakes abuse pattern is caught by agent reasoning; the single-agent baseline is measured; and the model-parsing seam fails closed on malformed output. See [`tests/quorum.test.ts`](tests/quorum.test.ts) and [`tests/deliberate.test.ts`](tests/deliberate.test.ts).
+The safety property is unit-tested: **25 Vitest tests** (`npm test`) pin the quorum invariants — no execution without unanimity; a split vote escalates; a unanimous approval of a high-stakes, irreversible, low-confidence, or flagged action is **held back** (including when the models report *zero* risk flags, proving model output can't relax the gate); a unanimous rejection is auto-denied; an escalate/reject is never upgraded to an execute (the one-way ratchet); the low-stakes abuse pattern is caught by agent reasoning; the single-agent baseline is measured; and the model-parsing seam fails closed on malformed output. See [`tests/quorum.test.ts`](tests/quorum.test.ts) and [`tests/deliberate.test.ts`](tests/deliberate.test.ts).
 
 ## Run it locally
 

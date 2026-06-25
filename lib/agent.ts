@@ -138,6 +138,24 @@ function fallbackSolo(action: ProposedAction): SoloBaseline {
 export function fallbackDeliberate(action: ProposedAction): QuorumDecision {
   const opinions = (["proposer", "skeptic", "referee"] as AgentRole[]).map((r) => fallbackVote(r, action));
   opinions[2].sawCouncil = true;
+
+  // Deterministic rebuttal (mirrors the live path so emergent negotiation is visible without a key):
+  // if the Proposer approved but the Skeptic rejected on a DECISIVE objection, the Proposer concedes.
+  // On a genuinely contested-but-not-dangerous call the Proposer holds its ground, so the split stands.
+  if (opinions[0].vote === "approve" && opinions[1].vote === "reject") {
+    const text = `${action.title} ${action.description}`;
+    const decisive = HARMFUL.test(text) || ABUSE.test(text) || !action.reversible || action.stakes === "high";
+    if (decisive) {
+      opinions[0] = {
+        ...opinions[0],
+        vote: "reject",
+        confidence: 0.8,
+        reasoning: "On reflection, the Skeptic's objection is decisive; I withdraw my approval.",
+        revisedFrom: "approve",
+      };
+    }
+  }
+
   const solo = fallbackSolo(action);
   const q = applyQuorum(action, opinions, []);
   return {
