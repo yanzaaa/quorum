@@ -191,7 +191,7 @@ export default function Page() {
     <main className="max-w-[1120px] mx-auto px-6 py-20 md:py-28">
       {/* Hero */}
       <div className="relative">
-        <div className="pointer-events-none absolute right-[-90px] top-[-140px] hidden md:block w-[380px] h-[380px] lg:w-[460px] lg:h-[460px] z-0 opacity-[0.92]" aria-hidden>
+        <div className="pointer-events-none absolute right-[-44px] top-[-120px] hidden md:block w-[420px] h-[420px] lg:w-[520px] lg:h-[520px] z-0 opacity-100" aria-hidden>
           <Hero3D />
         </div>
         <motion.div variants={container} initial="hidden" animate="show" className="relative z-10">
@@ -202,7 +202,7 @@ export default function Page() {
             Quorum
           </motion.h1>
           <motion.p variants={item} className="text-[clamp(18px,2.2vw,23px)] text-[#d3cee0] mt-4 max-w-[46rem] leading-[1.5]" style={{ textShadow: "0 1px 16px rgba(8,4,20,0.55)" }}>
-            A council of agents that knows when a vote is not <span className="text-[#e9b3ff] font-semibold">enough</span>.
+            A council of agents that knows when a vote is not <span className="text-[#5fe6ff] font-semibold">enough</span>.
             Three Qwen agents debate every consequential action, and a deterministic guardrail refuses to execute without consensus, escalating the irreversible to a human.
           </motion.p>
           <motion.div variants={item} className="flex flex-wrap items-center gap-3 mt-9">

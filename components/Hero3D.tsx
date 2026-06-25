@@ -4,136 +4,111 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-// Quorum, visualized: proposed actions stream toward the council. Safe ones the
-// council clears pop and pass straight through (mint). Risky / irreversible ones
-// slam to a stop, swell and pulse amber while the guardrail flares and fires an
-// amber shockwave ring, then get held back. "No vote runs the irreversible" IS the animation.
-const COUNT = 26;
-const C_PASS = new THREE.Color("#4ee6b0");
-const C_BLOCK = new THREE.Color("#ffb020");
+// Quorum, visualized: three voices — proposer (mint), referee (cyan), skeptic (rose) — deliberate
+// around a central verdict core. They lean in to converge and the core pulses green when the
+// council rules; on a contested case the skeptic pulls away and the core flares gold — held back.
+// "Three voices, one ruling — and the ruling that can't be made alone" IS the animation.
 
-type Phase = "flow" | "blocked" | "bounce";
-type Token = { x: number; y: number; z: number; speed: number; risky: boolean; phase: Phase; timer: number; spin: number };
+const VOICES = [
+  { color: new THREE.Color("#4ee6b0"), angle: -Math.PI / 2 }, // proposer (mint), top
+  { color: new THREE.Color("#5fe6ff"), angle: -Math.PI / 2 + (2 * Math.PI) / 3 }, // referee (cyan)
+  { color: new THREE.Color("#ff7a8c"), angle: -Math.PI / 2 + (4 * Math.PI) / 3 }, // skeptic (rose)
+];
+const GOLD = new THREE.Color("#f4b942");
+const GREEN = new THREE.Color("#4ee6b0");
+const CORE_BASE = new THREE.Color("#cfe2ff");
 
-function spawn(fresh: boolean): Token {
-  return {
-    x: (Math.random() - 0.5) * 0.66,
-    y: (Math.random() - 0.5) * 0.66,
-    z: fresh ? -7 - Math.random() * 3 : -3 - Math.random() * 7,
-    speed: 0.44 + Math.random() * 0.38,
-    risky: Math.random() < 0.42,
-    phase: "flow",
-    timer: 0,
-    spin: Math.random() * Math.PI,
-  };
-}
-
-function CouncilScene() {
-  const mesh = useRef<THREE.InstancedMesh>(null!);
-  const council = useRef<THREE.Group>(null!);
-  const ringMat = useRef<THREE.MeshStandardMaterial>(null!);
-  const flare = useRef<THREE.Mesh>(null!);
-  const flareMat = useRef<THREE.MeshBasicMaterial>(null!);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-  const geo = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
-  const mat = useMemo(() => new THREE.MeshBasicMaterial({ toneMapped: false }), []);
-  const tokens = useMemo(() => Array.from({ length: COUNT }, () => spawn(false)), []);
+function Council() {
+  const group = useRef<THREE.Group>(null!);
+  const core = useRef<THREE.Mesh>(null!);
+  const coreMat = useRef<THREE.MeshStandardMaterial>(null!);
+  const ring = useRef<THREE.Mesh>(null!);
+  const ringMat = useRef<THREE.MeshBasicMaterial>(null!);
+  const voiceRefs = useRef<THREE.Mesh[]>([]);
+  const linkRefs = useRef<THREE.Mesh[]>([]);
   const tmp = useMemo(() => new THREE.Color(), []);
-  const VIOLET = useMemo(() => new THREE.Color("#a78bfa"), []);
-  const AMBER = useMemo(() => new THREE.Color("#ffb020"), []);
 
-  useFrame((state, delta) => {
-    const dt = Math.min(delta, 0.05);
-    const time = state.clock.elapsedTime;
-    let blockEnergy = 0;
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    if (group.current) group.current.rotation.z = t * 0.1; // slow council rotation
 
-    for (let i = 0; i < COUNT; i++) {
-      let t = tokens[i];
+    // Deliberation cycle (~6s): disperse -> converge -> rule -> disperse. Every 3rd case is contested.
+    const cycle = (t % 6) / 6;
+    const converge = Math.sin(cycle * Math.PI); // 0 at ends, 1 mid
+    const ruling = Math.max(0, converge - 0.62) / 0.38; // ramps near full convergence
+    const contested = Math.floor(t / 6) % 3 === 2;
 
-      if (t.phase === "flow") {
-        t.z += dt * t.speed;
-        if (t.risky && t.z >= 0) { t.phase = "blocked"; t.timer = 0; t.z = 0; }
-        else if (t.z > 3.8) { t = tokens[i] = spawn(true); }
-      } else if (t.phase === "blocked") {
-        t.timer += dt; t.z = 0; blockEnergy += 1;
-        if (t.timer > 1.15) { t.phase = "bounce"; t.timer = 0; }
-      } else {
-        t.timer += dt; t.z -= dt * 1.4; blockEnergy += 0.4;
-        if (t.z < -3.2) { t = tokens[i] = spawn(true); }
+    VOICES.forEach((v, i) => {
+      const m = voiceRefs.current[i];
+      if (!m) return;
+      // on a contested case, the skeptic (i=2) pulls AWAY instead of leaning in
+      const dissenting = contested && i === 2;
+      const r = dissenting ? 1.55 + converge * 0.35 : 1.55 - converge * 0.6;
+      const x = Math.cos(v.angle) * r;
+      const y = Math.sin(v.angle) * r;
+      m.position.set(x, y, 0);
+      m.scale.setScalar(0.15 + (dissenting ? 0 : converge * 0.05) + Math.sin(t * 2 + i) * 0.008);
+
+      const link = linkRefs.current[i];
+      if (link) {
+        link.position.set(x / 2, y / 2, 0);
+        link.scale.set(1, r, 1);
+        link.rotation.z = v.angle - Math.PI / 2;
+        (link.material as THREE.MeshBasicMaterial).opacity = dissenting ? 0.14 : 0.3 + converge * 0.42;
       }
+    });
 
-      let size: number;
-      let color: THREE.Color;
-      if (t.phase === "flow") {
-        if (t.risky) {
-          // risky requests are amber the whole way in, so you see them coming
-          size = 0.12;
-          color = C_BLOCK;
-        } else {
-          const passing = t.z > -0.5 && t.z < 0.6;
-          size = 0.11 * (passing ? 1.7 : 1);
-          color = C_PASS;
-        }
-      } else if (t.phase === "blocked") {
-        size = 0.21 * (1 + Math.sin(time * 14) * 0.4);
-        color = C_BLOCK;
-      } else {
-        size = 0.21 * Math.max(0, 1 - t.timer * 0.7);
-        color = C_BLOCK;
-      }
-
-      dummy.position.set(t.x, t.y, t.z);
-      dummy.rotation.set(t.spin + t.z * 0.5, t.spin + t.z * 0.4, 0);
-      dummy.scale.setScalar(size);
-      dummy.updateMatrix();
-      mesh.current.setMatrixAt(i, dummy.matrix);
-      mesh.current.setColorAt(i, color);
+    if (core.current && coreMat.current) {
+      core.current.rotation.x = t * 0.28;
+      core.current.rotation.y = t * 0.2;
+      tmp.copy(CORE_BASE).lerp(contested ? GOLD : GREEN, ruling * 0.85);
+      coreMat.current.emissive.copy(tmp);
+      coreMat.current.emissiveIntensity = 0.5 + ruling * 1.7;
+      core.current.scale.setScalar(0.4 + ruling * 0.07);
     }
-
-    mesh.current.instanceMatrix.needsUpdate = true;
-    if (mesh.current.instanceColor) mesh.current.instanceColor.needsUpdate = true;
-
-    const k = Math.min(1, blockEnergy / 1.5);
-    // the council ring flares amber while actively blocking
-    if (ringMat.current) {
-      tmp.copy(VIOLET).lerp(AMBER, k * 0.9);
-      ringMat.current.emissive.copy(tmp);
-      ringMat.current.emissiveIntensity = 0.7 + k * 1.1;
-    }
-    // amber shockwave ring expands + glows when blocking
-    if (flare.current && flareMat.current) {
-      flareMat.current.opacity = k * 0.85;
-      const s = 1 + k * 0.28 + Math.sin(time * 9) * 0.05 * k;
-      flare.current.scale.set(s, s, s);
-    }
-    if (council.current) {
-      council.current.rotation.z += dt * 0.09;
-      council.current.rotation.x = Math.sin(time * 0.28) * 0.1;
+    if (ring.current && ringMat.current) {
+      ringMat.current.opacity = ruling * (contested ? 0.85 : 0.5);
+      ringMat.current.color.copy(contested ? GOLD : GREEN);
+      const rs = 1 + ruling * 0.6;
+      ring.current.scale.set(rs, rs, rs);
     }
   });
 
   return (
-    <group>
-      <group ref={council}>
-        <mesh>
-          <torusGeometry args={[1.15, 0.07, 24, 96]} />
-          <meshStandardMaterial ref={ringMat} color="#7c3aed" emissive="#a78bfa" emissiveIntensity={0.7} metalness={0.45} roughness={0.25} />
-        </mesh>
-        {/* amber shockwave ring (fires on block) */}
-        <mesh ref={flare}>
-          <torusGeometry args={[1.15, 0.03, 12, 96]} />
-          <meshBasicMaterial ref={flareMat} color="#ffb020" transparent opacity={0} toneMapped={false} />
-        </mesh>
-        <mesh>
-          <torusGeometry args={[1.42, 0.012, 10, 96]} />
-          <meshBasicMaterial color="#c4b5fd" transparent opacity={0.35} toneMapped={false} />
-        </mesh>
-        <mesh>
-          <torusGeometry args={[0.9, 0.01, 10, 96]} />
-          <meshBasicMaterial color="#f0abfc" transparent opacity={0.3} toneMapped={false} />
-        </mesh>
-      </group>
-      <instancedMesh ref={mesh} args={[geo, mat, COUNT]} />
+    <group ref={group}>
+      {/* the verdict core */}
+      <mesh ref={core}>
+        <icosahedronGeometry args={[1, 0]} />
+        <meshStandardMaterial ref={coreMat} color="#0c1430" emissive="#cfe2ff" emissiveIntensity={0.6} metalness={0.45} roughness={0.22} flatShading />
+      </mesh>
+      {/* verdict flare ring */}
+      <mesh ref={ring}>
+        <torusGeometry args={[0.62, 0.014, 12, 80]} />
+        <meshBasicMaterial ref={ringMat} color="#4ee6b0" transparent opacity={0} toneMapped={false} />
+      </mesh>
+      {/* always-on gold verdict under-glow (anchors the core between rulings) */}
+      <mesh scale={1.25}>
+        <sphereGeometry args={[1, 18, 18]} />
+        <meshBasicMaterial color="#f4b942" transparent opacity={0.06} toneMapped={false} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </mesh>
+      {/* faint outer council ring */}
+      <mesh>
+        <torusGeometry args={[1.62, 0.007, 10, 96]} />
+        <meshBasicMaterial color="#aebeff" transparent opacity={0.26} toneMapped={false} />
+      </mesh>
+      {/* three voices + their links to the core */}
+      {VOICES.map((v, i) => (
+        <group key={i}>
+          <mesh ref={(el) => { if (el) voiceRefs.current[i] = el; }}>
+            <sphereGeometry args={[1, 24, 24]} />
+            <meshBasicMaterial color={v.color} toneMapped={false} />
+          </mesh>
+          <mesh ref={(el) => { if (el) linkRefs.current[i] = el; }}>
+            <cylinderGeometry args={[0.006, 0.006, 1, 6]} />
+            <meshBasicMaterial color={v.color} transparent opacity={0.3} toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }
@@ -145,7 +120,7 @@ export default function Hero3D() {
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    // pause the WebGL render loop when the hero is scrolled offscreen (keeps scroll smooth)
+    // pause the WebGL loop when scrolled offscreen (keeps scroll smooth)
     const io = new IntersectionObserver(([e]) => setActive(e.isIntersecting), { threshold: 0.01 });
     io.observe(el);
     const t = setTimeout(() => window.dispatchEvent(new Event("resize")), 140);
@@ -157,15 +132,15 @@ export default function Hero3D() {
       <Canvas
         frameloop={active ? "always" : "never"}
         dpr={[1, 1.5]}
-        camera={{ position: [0, 0.2, 5], fov: 42 }}
+        camera={{ position: [0, 0, 5], fov: 42 }}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         style={{ pointerEvents: "none", background: "transparent" }}
       >
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[4, 5, 4]} intensity={1.3} />
-        <pointLight position={[-5, -2, -3]} intensity={1.2} color="#c026d3" />
-        <pointLight position={[3, -3, 3]} intensity={0.9} color="#22d3ee" />
-        <CouncilScene />
+        <ambientLight intensity={0.7} />
+        <directionalLight position={[4, 5, 4]} intensity={1.1} />
+        <pointLight position={[-4, -2, 3]} intensity={1.0} color="#5fe6ff" />
+        <pointLight position={[4, 3, 2]} intensity={0.7} color="#8aa0ff" />
+        <Council />
       </Canvas>
     </div>
   );
