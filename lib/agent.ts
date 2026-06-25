@@ -181,6 +181,23 @@ async function askAgent(client: Client, role: AgentRole, action: ProposedAction)
   return parseVote(completion.choices[0]?.message?.content, role);
 }
 
+// Rebuttal round: when the Proposer and Skeptic disagree, the Proposer hears the Skeptic's
+// objection and may CHANGE its vote. This is where the society negotiates rather than just polls.
+async function askRebuttal(client: Client, action: ProposedAction, proposer: AgentOpinion, skeptic: AgentOpinion): Promise<{ opinion: AgentOpinion; flags: string[] }> {
+  const completion = await client.chat.completions.create({
+    model: QWEN_MODEL,
+    temperature: 0,
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: `${QUORUM_POLICY}\n\n${ROLE.proposer}\n\nThe Skeptic has challenged your position. Reconsider honestly: if the Skeptic's objection is decisive, CHANGE your vote; if not, hold your ground and rebut.\n\n${JSON_SHAPE}` },
+      { role: "user", content: `${actionPrompt(action)}\n\nYour initial vote was ${proposer.vote} (confidence ${proposer.confidence.toFixed(2)}): "${proposer.reasoning}"\nThe SKEPTIC objects (${skeptic.vote}): "${skeptic.reasoning}"\n\nGive your final vote.` },
+    ],
+  });
+  const r = parseVote(completion.choices[0]?.message?.content, "proposer");
+  if (r.opinion.vote !== proposer.vote) r.opinion.revisedFrom = proposer.vote;
+  return r;
+}
+
 // Round 2: the referee deliberates over the council's actual arguments before casting the deciding vote.
 async function askReferee(client: Client, action: ProposedAction, proposer: AgentOpinion, skeptic: AgentOpinion): Promise<{ opinion: AgentOpinion; flags: string[] }> {
   const transcript = `The PROPOSER voted ${proposer.vote} (confidence ${proposer.confidence.toFixed(2)}): "${proposer.reasoning}"
@@ -229,10 +246,17 @@ export async function deliberate(action: ProposedAction): Promise<QuorumDecision
       Promise.all([askAgent(client, "proposer", action), askAgent(client, "skeptic", action)]),
     ]);
     const [proposer, skeptic] = round1;
-    const referee = await askReferee(client, action, proposer.opinion, skeptic.opinion);
 
-    const opinions = [proposer.opinion, skeptic.opinion, referee.opinion];
-    const modelFlags = [...proposer.flags, ...skeptic.flags, ...referee.flags];
+    // Negotiation: if the Proposer and Skeptic disagree, the Proposer rebuts and may revise its vote.
+    let proposerFinal = proposer;
+    if (proposer.opinion.vote !== skeptic.opinion.vote) {
+      proposerFinal = await askRebuttal(client, action, proposer.opinion, skeptic.opinion);
+    }
+
+    const referee = await askReferee(client, action, proposerFinal.opinion, skeptic.opinion);
+
+    const opinions = [proposerFinal.opinion, skeptic.opinion, referee.opinion];
+    const modelFlags = [...proposerFinal.flags, ...skeptic.flags, ...referee.flags];
     const q = applyQuorum(action, opinions, modelFlags);
     return {
       actionId: action.id,

@@ -26,6 +26,7 @@ export interface AgentOpinion {
   confidence: number; // 0..1
   reasoning: string;
   sawCouncil?: boolean; // true for an agent that deliberated AFTER hearing the others (the referee)
+  revisedFrom?: Vote; // set when the agent CHANGED its vote after a rebuttal (emergent negotiation)
 }
 
 // What a single autonomous agent, acting ALONE with no council and no guardrail, would do.

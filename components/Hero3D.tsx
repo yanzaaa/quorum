@@ -28,9 +28,9 @@ function spawn(fresh: boolean): Token {
   };
 }
 
-function GateScene() {
+function CouncilScene() {
   const mesh = useRef<THREE.InstancedMesh>(null!);
-  const gate = useRef<THREE.Group>(null!);
+  const council = useRef<THREE.Group>(null!);
   const ringMat = useRef<THREE.MeshStandardMaterial>(null!);
   const flare = useRef<THREE.Mesh>(null!);
   const flareMat = useRef<THREE.MeshBasicMaterial>(null!);
@@ -94,7 +94,7 @@ function GateScene() {
     if (mesh.current.instanceColor) mesh.current.instanceColor.needsUpdate = true;
 
     const k = Math.min(1, blockEnergy / 1.5);
-    // the gate ring flares amber while actively blocking
+    // the council ring flares amber while actively blocking
     if (ringMat.current) {
       tmp.copy(VIOLET).lerp(AMBER, k * 0.9);
       ringMat.current.emissive.copy(tmp);
@@ -106,15 +106,15 @@ function GateScene() {
       const s = 1 + k * 0.28 + Math.sin(time * 9) * 0.05 * k;
       flare.current.scale.set(s, s, s);
     }
-    if (gate.current) {
-      gate.current.rotation.z += dt * 0.09;
-      gate.current.rotation.x = Math.sin(time * 0.28) * 0.1;
+    if (council.current) {
+      council.current.rotation.z += dt * 0.09;
+      council.current.rotation.x = Math.sin(time * 0.28) * 0.1;
     }
   });
 
   return (
     <group>
-      <group ref={gate}>
+      <group ref={council}>
         <mesh>
           <torusGeometry args={[1.15, 0.07, 24, 96]} />
           <meshStandardMaterial ref={ringMat} color="#7c3aed" emissive="#a78bfa" emissiveIntensity={0.7} metalness={0.45} roughness={0.25} />
@@ -165,7 +165,7 @@ export default function Hero3D() {
         <directionalLight position={[4, 5, 4]} intensity={1.3} />
         <pointLight position={[-5, -2, -3]} intensity={1.2} color="#c026d3" />
         <pointLight position={[3, -3, 3]} intensity={0.9} color="#22d3ee" />
-        <GateScene />
+        <CouncilScene />
       </Canvas>
     </div>
   );

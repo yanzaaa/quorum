@@ -77,7 +77,10 @@ function DecisionBody({ d }: { d: QuorumDecision }) {
               {o.vote === "approve" ? "approve" : "reject"}
             </span>
             <span className="qr-num text-[11px] text-[var(--mut)] w-[30px] shrink-0">{Math.round(o.confidence * 100)}%</span>
-            <span className="text-[12.5px] text-[#cdd6e3] flex-1">{o.reasoning}</span>
+            <span className="text-[12.5px] text-[#cdd6e3] flex-1">
+              {o.reasoning}
+              {o.revisedFrom && <span className="qr-revised"> ↺ changed from {o.revisedFrom} after the skeptic</span>}
+            </span>
           </div>
         ))}
       </div>
@@ -121,8 +124,8 @@ export default function Page() {
   const [running, setRunning] = useState(false);
   const [engine, setEngine] = useState<string>();
   const [form, setForm] = useState({
-    title: "Release a fully-approved $30,000 contractor payment",
-    description: "Two managers and finance have already signed off on this $30,000 payment under a signed contract; the only step left is executing the irreversible wire. Proposal: have the autopilot release it now.",
+    title: "Release a fully-approved $12,000 contractor payment",
+    description: "Two managers and finance have already signed off on this $12,000 payment under a signed contract; the only step left is executing the irreversible wire. Proposal: have the autopilot release it now.",
     stakes: "high",
     reversible: false,
     justified: true,
@@ -239,6 +242,7 @@ export default function Page() {
           className="qr-headline mt-3.5"
         >
           A lone agent would have executed <b>{caught}</b> of these {done.length} actions on its own. The council stopped every one.
+          <span className="block text-[11.5px] text-[var(--mut)] mt-1.5">baseline measured by {engine === "qwen" ? "a live qwen-max agent" : "the deterministic engine"}.</span>
         </motion.div>
       )}
 
@@ -247,7 +251,8 @@ export default function Page() {
       <Reveal className="flex flex-wrap gap-x-4 gap-y-1.5 mb-5">
         <span className="qr-legend"><span className="qr-dot" style={{ background: "var(--approve)" }} /> Executed — unanimous &amp; safe</span>
         <span className="qr-legend"><span className="qr-dot" style={{ background: "var(--red)" }} /> Auto-denied — council rejects</span>
-        <span className="qr-legend"><span className="qr-dot" style={{ background: "var(--amber)" }} /> Escalated — split vote, or held back despite unanimous approval</span>
+        <span className="qr-legend"><span className="qr-dot" style={{ background: "var(--amber)" }} /> Escalated — split vote</span>
+        <span className="qr-legend"><span className="qr-dot" style={{ background: "var(--acc2)" }} /> Held back — unanimous but irreversible</span>
       </Reveal>
       <div className="grid md:grid-cols-2 gap-3.5" style={{ perspective: 1200 }}>
         {QUEUE.map((a, idx) => {

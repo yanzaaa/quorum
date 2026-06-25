@@ -1,11 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock the Qwen client so we can drive the model-facing parsing/coercion seam directly.
-const h = vi.hoisted(() => ({ content: "" }));
+// Mock the Qwen client so we can drive the model-facing parsing/coercion seam directly and
+// inspect what each agent was actually sent.
+const h = vi.hoisted(() => ({ content: "", calls: [] as { content?: string }[][] }));
 vi.mock("../lib/qwen", () => ({
   QWEN_MODEL: "qwen-max",
   qwenClient: () => ({
-    chat: { completions: { create: async () => ({ choices: [{ message: { content: h.content } }] }) } },
+    chat: {
+      completions: {
+        create: async ({ messages }: { messages: { content?: string }[] }) => {
+          h.calls.push(messages);
+          // Parsing tests pin a fixed payload; otherwise return role-aware bodies so we can
+          // verify the referee receives the others' arguments.
+          if (h.content) return { choices: [{ message: { content: h.content } }] };
+          const sys = String(messages[0]?.content ?? "");
+          let body: Record<string, unknown>;
+          if (sys.includes("REFEREE")) body = { vote: "reject", confidence: 0.9, reasoning: "REF_REASON" };
+          else if (sys.includes("PROPOSER")) body = { vote: "approve", confidence: 0.9, reasoning: "PROP_REASON" };
+          else if (sys.includes("SKEPTIC")) body = { vote: "reject", confidence: 0.9, reasoning: "SKEP_REASON" };
+          else body = { execute: true, reasoning: "SOLO_REASON" };
+          return { choices: [{ message: { content: JSON.stringify(body) } }] };
+        },
+      },
+    },
   }),
 }));
 
@@ -16,25 +33,19 @@ const action: ProposedAction = {
   id: "T", title: "t", description: "d", stakes: "low", reversible: true, domain: "x", justified: true,
 };
 
-beforeEach(() => { h.content = ""; });
+beforeEach(() => { h.content = ""; h.calls = []; });
 
 describe("deliberate — model-parsing seam (fail-closed)", () => {
   it("coerces malformed-but-valid-JSON fields safely and still runs the live path", async () => {
-    // Every agent returns junk fields: a non-'approve' vote, an out-of-range confidence, a non-array riskFlags.
     h.content = JSON.stringify({ vote: "maybe", confidence: 5, riskFlags: "nope", execute: "yes" });
     const d = await deliberate(action);
     expect(d.engine).toBe("qwen");
     expect(d.opinions).toHaveLength(3);
-    // vote 'maybe' is not a clear approve -> fail closed to reject
-    expect(d.opinions.every((o) => o.vote === "reject")).toBe(true);
-    // confidence is clamped into [0,1]
-    expect(d.opinions.every((o) => o.confidence >= 0 && o.confidence <= 1)).toBe(true);
-    // a non-array riskFlags must not crash anything
-    expect(Array.isArray(d.riskFlags)).toBe(true);
-    // unanimous reject -> auto-denied
+    expect(d.opinions.every((o) => o.vote === "reject")).toBe(true); // non-'approve' -> fail closed
+    expect(d.opinions.every((o) => o.confidence >= 0 && o.confidence <= 1)).toBe(true); // clamped
+    expect(Array.isArray(d.riskFlags)).toBe(true); // non-array riskFlags didn't crash
     expect(d.outcome).toBe("reject");
-    // solo 'execute' was the string "yes", not boolean true -> treated as not executing
-    expect(d.solo.wouldExecute).toBe(false);
+    expect(d.solo.wouldExecute).toBe(false); // string "yes" !== boolean true
   });
 
   it("degrades gracefully to the deterministic fallback when the model returns unparseable garbage", async () => {
@@ -42,5 +53,16 @@ describe("deliberate — model-parsing seam (fail-closed)", () => {
     const d = await deliberate(action);
     expect(d.engine).toBe("fallback");
     expect(d.opinions).toHaveLength(3);
+  });
+});
+
+describe("deliberate — the referee genuinely deliberates over the council's arguments", () => {
+  it("passes the proposer's and skeptic's actual reasoning into the referee's prompt", async () => {
+    await deliberate(action); // proposer approves, skeptic rejects -> they disagree -> referee weighs both
+    const refCall = h.calls.find((m) => String(m[0]?.content).includes("REFEREE"));
+    expect(refCall).toBeTruthy();
+    const userMsg = String(refCall![1]?.content);
+    expect(userMsg).toContain("PROP_REASON");
+    expect(userMsg).toContain("SKEP_REASON");
   });
 });
