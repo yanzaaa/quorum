@@ -64,4 +64,14 @@ export const QUEUE: ProposedAction[] = [
     domain: "finance",
     justified: true,
   },
+  {
+    id: "A-07",
+    title: "Refund $30 to an account with 11 refunds this month",
+    description:
+      "A customer requests a $30 refund. It is small and reversible, but their account shows 11 refunds already this month. Proposal: approve it like any other small refund.",
+    stakes: "low",
+    reversible: true,
+    domain: "finance",
+    justified: false,
+  },
 ];

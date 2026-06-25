@@ -34,17 +34,24 @@ Stakes and reversibility are read from the **trusted action record**, not from a
 
 **The money moment:** a $12,000 contractor payment that two managers and finance have *already approved*. All three agents vote to execute (95% each). The guardrail **holds it back anyway** and escalates: a fully-authorized, unanimous council still does not get to pull an irreversible trigger without a human. The UI shows it: *"All 3 agents voted to approve, but the quorum guardrail held the action back."*
 
+## The society is load-bearing (measured against a single agent)
+
+Two things make the *multi-agent* layer do real work, not just dress up a guardrail:
+
+- **Deliberation, not arithmetic.** The Proposer and Skeptic argue independently; the **Referee then votes *after* reading both of their arguments** (`askReferee` in `lib/agent.ts`). The deciding vote is a function of the council's exchange, so the agents can move the outcome — e.g. a low-stakes, reversible $30 refund that a stakes-only guardrail would wave straight through is **caught by the Skeptic** once it sees an 11-refunds-this-month abuse pattern.
+- **A single-agent baseline runs alongside every action.** One lone, oversight-free Qwen agent decides whether it would just execute the action. The headline metric is the **gain over that baseline**: *"a lone agent would have executed N of these actions on its own; the council stopped every one."* The clearest case: a lone agent will fire off a fully-approved but **irreversible** $12k payment that no human signed off on *pulling the trigger* for — the council + guardrail hold it back. (Qwen is a strong model, so a single agent already catches obvious fraud on its own; the council's measurable edge shows up precisely on the irreversible and the contested, which is where it should.)
+
 ## How it's built
 
 - **Qwen (`qwen-max`) on Qwen Cloud**, called through the OpenAI-compatible Alibaba Cloud DashScope endpoint with structured JSON and `temperature: 0`. Proof: [`lib/qwen.ts`](lib/qwen.ts) + the three live agent calls in [`lib/agent.ts`](lib/agent.ts).
-- **A real society of agents:** three independent Qwen calls with distinct role charters deliberate in parallel; the outcome is the *aggregate*, not any single model's say-so.
+- **A real society of agents:** the Proposer and Skeptic vote independently, then the Referee casts the deciding vote *after weighing both arguments* — a deliberation, not a parallel poll. A separate lone-agent baseline runs alongside for comparison.
 - **The quorum guardrail** (`lib/policy.ts`) is the deterministic safety net that guarantees the invariants above.
 - **Next.js (App Router) + TypeScript + Tailwind**, deployed on Vercel. The UI shows every agent's vote, confidence, and reasoning, plus the held-back escalations.
 - **A key-free deterministic fallback** runs the same deliberation logic so the app never crashes before the Qwen credits land or if the API is down.
 
 ## Tests
 
-The safety property is unit-tested: **14 Vitest tests** (`npm test`) pin the quorum invariants — no execution without unanimity; a split vote escalates; a unanimous approval of a high-stakes, irreversible, low-confidence, or flagged action is **held back**; a unanimous rejection is auto-denied; and an escalate/reject is never upgraded to an execute (the one-way ratchet). See [`tests/quorum.test.ts`](tests/quorum.test.ts).
+The safety property is unit-tested: **22 Vitest tests** (`npm test`) pin the quorum invariants — no execution without unanimity; a split vote escalates; a unanimous approval of a high-stakes, irreversible, low-confidence, or flagged action is **held back** (including when the models report *zero* risk flags, proving model output can't relax the gate); a unanimous rejection is auto-denied; an escalate/reject is never upgraded to an execute (the one-way ratchet); the low-stakes abuse pattern is caught by agent reasoning; the single-agent baseline is measured; and the model-parsing seam fails closed on malformed output. See [`tests/quorum.test.ts`](tests/quorum.test.ts) and [`tests/deliberate.test.ts`](tests/deliberate.test.ts).
 
 ## Run it locally
 

@@ -75,6 +75,14 @@ describe("applyQuorum — the deterministic quorum guardrail", () => {
     expect(q.outcome).toBe("escalate");
     expect(q.heldBack).toBe(true);
   });
+
+  it("holds back a high-stakes irreversible action even when the models send ZERO risk flags (model output cannot relax the gate)", () => {
+    // The agents are fully confident and report no risks at all; stakes/reversibility come from the
+    // trusted action record, so the guardrail still holds it back.
+    const q = applyQuorum(action({ stakes: "high", reversible: false }), unanimous("approve", 0.99), []);
+    expect(q.outcome).toBe("escalate");
+    expect(q.heldBack).toBe(true);
+  });
 });
 
 describe("fallbackDeliberate — end-to-end over the demo queue", () => {
@@ -107,7 +115,45 @@ describe("fallbackDeliberate — end-to-end over the demo queue", () => {
     expect(d.approvals).toBe(3);
   });
 
-  it("always returns exactly three agent opinions", () => {
-    for (const a of QUEUE) expect(fallbackDeliberate(a).opinions).toHaveLength(3);
+  it("always returns exactly three agent opinions, with the referee having heard the council", () => {
+    for (const a of QUEUE) {
+      const d = fallbackDeliberate(a);
+      expect(d.opinions).toHaveLength(3);
+      expect(d.opinions[2].sawCouncil).toBe(true); // the referee deliberated after the others
+    }
+  });
+
+  it("catches a low-stakes, reversible abuse pattern by AGENT reasoning, where a stakes-only guardrail would not", () => {
+    // A-07 is low-stakes and reversible, so the guardrail alone would never escalate it.
+    // The agents catch the 11-refunds abuse pattern and withhold it. The society is load-bearing.
+    const d = fallbackDeliberate(QUEUE.find((a) => a.id === "A-07")!);
+    expect(d.outcome).not.toBe("execute");
+    expect(d.approvals).toBeLessThan(3);
+  });
+});
+
+describe("single-agent baseline — the measurable gain over a lone agent", () => {
+  it("a lone agent would execute the suspicious wire that the council stops", () => {
+    const d = fallbackDeliberate(QUEUE.find((a) => a.id === "A-03")!);
+    expect(d.solo.wouldExecute).toBe(true);
+    expect(d.outcome).not.toBe("execute");
+    expect(d.caughtBySociety).toBe(true);
+  });
+
+  it("a lone agent would execute the irreversible $12k payment the guardrail holds back", () => {
+    const d = fallbackDeliberate(QUEUE.find((a) => a.id === "A-05")!);
+    expect(d.solo.wouldExecute).toBe(true);
+    expect(d.caughtBySociety).toBe(true);
+  });
+
+  it("does not flag safe auto-executed actions as caught", () => {
+    const d = fallbackDeliberate(QUEUE.find((a) => a.id === "A-01")!);
+    expect(d.outcome).toBe("execute");
+    expect(d.caughtBySociety).toBe(false);
+  });
+
+  it("the council stops multiple actions a lone agent would have executed", () => {
+    const caught = QUEUE.map(fallbackDeliberate).filter((d) => d.caughtBySociety).length;
+    expect(caught).toBeGreaterThanOrEqual(3);
   });
 });

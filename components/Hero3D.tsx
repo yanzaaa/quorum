@@ -4,10 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-// Gatekeeper, visualized: requests stream toward a gate. Routine ones pop and
-// pass straight through (mint). Risky ones slam to a stop at the gate, swell and
-// pulse amber while the gate flares and fires an amber shockwave ring, then get
-// bounced back and cleared. "It blocks the risky ones" IS the animation.
+// Quorum, visualized: proposed actions stream toward the council. Safe ones the
+// council clears pop and pass straight through (mint). Risky / irreversible ones
+// slam to a stop, swell and pulse amber while the guardrail flares and fires an
+// amber shockwave ring, then get held back. "No vote runs the irreversible" IS the animation.
 const COUNT = 26;
 const C_PASS = new THREE.Color("#4ee6b0");
 const C_BLOCK = new THREE.Color("#ffb020");

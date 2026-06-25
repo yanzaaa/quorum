@@ -19,14 +19,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={jakarta.variable}>
       <body>
-        <div className="gk-bg" aria-hidden>
-          <span className="gk-orb a" />
-          <span className="gk-orb b" />
-          <span className="gk-orb c" />
-          <span className="gk-veil" />
+        <div className="qr-bg" aria-hidden>
+          <span className="qr-orb a" />
+          <span className="qr-orb b" />
+          <span className="qr-orb c" />
+          <span className="qr-veil" />
         </div>
-        <div className="gk-grid" aria-hidden />
-        <div className="gk-grain" aria-hidden />
+        <div className="qr-grid" aria-hidden />
+        <div className="qr-grain" aria-hidden />
         {children}
       </body>
     </html>

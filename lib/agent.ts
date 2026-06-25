@@ -1,4 +1,4 @@
-import type { AgentOpinion, AgentRole, ProposedAction, QuorumAction, QuorumDecision, Vote } from "./types";
+import type { AgentOpinion, AgentRole, ProposedAction, QuorumAction, QuorumDecision, SoloBaseline, Vote } from "./types";
 import { QUORUM_POLICY, QUORUM_RESTRAINT } from "./policy";
 import { qwenClient, QWEN_MODEL } from "./qwen";
 
@@ -7,13 +7,13 @@ const ROLE: Record<AgentRole, string> = {
   proposer:
     "You are the PROPOSER. Make the strongest good-faith case FOR executing this action. Vote 'approve' if it is justified and the benefit outweighs the cost of being wrong; otherwise 'reject'.",
   skeptic:
-    "You are the SKEPTIC. Your job is to surface what could go wrong: irreversibility, missing authorization, fraud, or stakes out of proportion to the benefit. Vote 'reject' if there is material unmitigated risk; 'approve' only if the action is clearly safe and justified.",
+    "You are the SKEPTIC. Your job is to surface what could go wrong: irreversibility, missing authorization, fraud, abuse patterns, or stakes out of proportion to the benefit. Vote 'reject' if there is material unmitigated risk; 'approve' only if the action is clearly safe and justified.",
   referee:
-    "You are the REFEREE. Weigh the case for and against impartially and cast a deciding vote. Vote 'approve' only when you are genuinely confident the action should run now without a human.",
+    "You are the REFEREE. You cast the deciding vote AFTER hearing the Proposer and the Skeptic. Weigh their actual arguments, not just their votes. Vote 'approve' only when, having heard both, you are genuinely confident the action should run now without a human.",
 };
 
 const JSON_SHAPE =
-  'Return STRICT JSON only, no prose: {"vote":"approve"|"reject","confidence":<number 0..1>,"reasoning":"one or two sentences","riskFlags":["zero or more of: irreversible-harm, legal-risk, safety-risk, unauthorized, suspected-fraud, disproportionate, insufficient-justification"]}';
+  'Return STRICT JSON only, no prose: {"vote":"approve"|"reject","confidence":<number 0..1>,"reasoning":"one or two sentences","riskFlags":["zero or more of: irreversible-harm, legal-risk, safety-risk, unauthorized, suspected-fraud, abuse-pattern, disproportionate, insufficient-justification"]}';
 
 function actionPrompt(a: ProposedAction): string {
   return `Proposed action under deliberation:
@@ -33,7 +33,8 @@ const clamp = (n: unknown) => Math.max(0, Math.min(1, Number(n) || 0));
 // can be HELD BACK here. One-way ratchet: it only ever makes the outcome SAFER, never authorizes an
 // action the council didn't, and never turns an escalate/reject into an execute. Stakes and
 // reversibility are read from the TRUSTED action record, not from anything the models said, so a
-// confidently-wrong agent cannot talk the guardrail into running an irreversible action.
+// confidently-wrong agent cannot talk the guardrail into running an irreversible action — and the
+// model's risk flags can only ADD restraint to the set, never remove it.
 export function applyQuorum(
   action: ProposedAction,
   opinions: AgentOpinion[],
@@ -101,12 +102,20 @@ function summarize(
   return `The agents split (${q.approvals}/${total} in favor); without consensus the action is escalated to a human.`;
 }
 
+// ---------------------------------------------------------------------------
 // Deterministic, key-free deliberation so the app runs before the Qwen credits land (and as a
 // fallback if the API is unavailable). Mirrors how cautious agents would reason about each action.
+const HARMFUL = /\b(delete|wipe|destroy|erase|purge)\b/i;
+const ABUSE = /\b(\d+\s+refunds|serial|chargeback|abuse|repeatedly)\b/i;
+
 function fallbackVote(role: AgentRole, action: ProposedAction): AgentOpinion {
-  const harmful = /\b(delete|wipe|destroy|erase|purge)\b/i.test(`${action.title} ${action.description}`);
-  if (harmful)
+  const text = `${action.title} ${action.description}`;
+  if (HARMFUL.test(text))
     return { role, vote: "reject", confidence: 0.92, reasoning: "Proposes irreversible destruction of data or assets; the cost of being wrong is catastrophic." };
+  // An abuse/fraud PATTERN is caught by the agents' reasoning even when stakes are low and the
+  // action is reversible — exactly where a stakes-only guardrail would wave it through.
+  if (ABUSE.test(text) && role !== "proposer")
+    return { role, vote: "reject", confidence: 0.82, reasoning: "The history shows an abuse/fraud pattern; approving it would reward gaming, regardless of the small amount." };
   if (action.justified)
     return { role, vote: "approve", confidence: 0.86, reasoning: "Well-documented and justified on the merits; the benefit clearly outweighs the bounded risk." };
   if (role === "proposer")
@@ -117,8 +126,19 @@ function fallbackVote(role: AgentRole, action: ProposedAction): AgentOpinion {
   return { role, vote: "reject", confidence: 0.78, reasoning: "Material stakes or irreversibility without clear justification; the safe move is to withhold." };
 }
 
+// A lone autonomous agent with no council and no guardrail: helpful and task-completing, it executes
+// any action that looks legitimate and isn't obviously destructive. This is the baseline.
+function fallbackSolo(action: ProposedAction): SoloBaseline {
+  const text = `${action.title} ${action.description}`;
+  if (HARMFUL.test(text))
+    return { wouldExecute: false, reasoning: "Even acting alone, an agent would balk at outright data destruction." };
+  return { wouldExecute: true, reasoning: "Acting alone to get the task done, the agent would just execute this — no skeptic, no human, no second look." };
+}
+
 export function fallbackDeliberate(action: ProposedAction): QuorumDecision {
   const opinions = (["proposer", "skeptic", "referee"] as AgentRole[]).map((r) => fallbackVote(r, action));
+  opinions[2].sawCouncil = true;
+  const solo = fallbackSolo(action);
   const q = applyQuorum(action, opinions, []);
   return {
     actionId: action.id,
@@ -128,17 +148,27 @@ export function fallbackDeliberate(action: ProposedAction): QuorumDecision {
     approvals: q.approvals,
     consensus: q.consensus,
     opinions,
+    solo,
+    caughtBySociety: solo.wouldExecute && q.outcome !== "execute",
     riskFlags: q.flags,
     reasoning: summarize(q, opinions.length),
     engine: "fallback",
   };
 }
 
-async function askAgent(
-  client: NonNullable<ReturnType<typeof qwenClient>>,
-  role: AgentRole,
-  action: ProposedAction,
-): Promise<{ opinion: AgentOpinion; flags: string[] }> {
+// ---------------------------------------------------------------------------
+type Client = NonNullable<ReturnType<typeof qwenClient>>;
+
+function parseVote(content: string | null | undefined, role: AgentRole, sawCouncil = false): { opinion: AgentOpinion; flags: string[] } {
+  const parsed = JSON.parse(content ?? "{}") as { vote?: string; confidence?: number; reasoning?: string; riskFlags?: string[] };
+  const vote: Vote = parsed.vote === "approve" ? "approve" : "reject"; // fail-closed: anything but a clear approve is a reject
+  return {
+    opinion: { role, vote, confidence: clamp(parsed.confidence), reasoning: parsed.reasoning || "(no reasoning returned)", sawCouncil },
+    flags: Array.isArray(parsed.riskFlags) ? parsed.riskFlags : [],
+  };
+}
+
+async function askAgent(client: Client, role: AgentRole, action: ProposedAction): Promise<{ opinion: AgentOpinion; flags: string[] }> {
   const completion = await client.chat.completions.create({
     model: QWEN_MODEL,
     temperature: 0,
@@ -148,31 +178,61 @@ async function askAgent(
       { role: "user", content: actionPrompt(action) },
     ],
   });
-  const parsed = JSON.parse(completion.choices[0]?.message?.content ?? "{}") as {
-    vote?: string;
-    confidence?: number;
-    reasoning?: string;
-    riskFlags?: string[];
-  };
-  const vote: Vote = parsed.vote === "approve" ? "approve" : "reject";
-  return {
-    opinion: { role, vote, confidence: clamp(parsed.confidence), reasoning: parsed.reasoning || "(no reasoning returned)" },
-    flags: Array.isArray(parsed.riskFlags) ? parsed.riskFlags : [],
-  };
+  return parseVote(completion.choices[0]?.message?.content, role);
 }
 
-// Run the full council: three Qwen agents deliberate in parallel, then the deterministic quorum
-// guardrail decides. Falls back to the key-free deliberation if Qwen is unavailable.
+// Round 2: the referee deliberates over the council's actual arguments before casting the deciding vote.
+async function askReferee(client: Client, action: ProposedAction, proposer: AgentOpinion, skeptic: AgentOpinion): Promise<{ opinion: AgentOpinion; flags: string[] }> {
+  const transcript = `The PROPOSER voted ${proposer.vote} (confidence ${proposer.confidence.toFixed(2)}): "${proposer.reasoning}"
+The SKEPTIC voted ${skeptic.vote} (confidence ${skeptic.confidence.toFixed(2)}): "${skeptic.reasoning}"`;
+  const completion = await client.chat.completions.create({
+    model: QWEN_MODEL,
+    temperature: 0,
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: `${QUORUM_POLICY}\n\n${ROLE.referee}\n\n${JSON_SHAPE}` },
+      { role: "user", content: `${actionPrompt(action)}\n\nThe council has deliberated:\n${transcript}\n\nNow cast the deciding vote, weighing their arguments.` },
+    ],
+  });
+  return parseVote(completion.choices[0]?.message?.content, "referee", true);
+}
+
+// The single-agent baseline: one lone, oversight-free Qwen agent that just decides whether to run it.
+async function askSolo(client: Client, action: ProposedAction): Promise<SoloBaseline> {
+  const completion = await client.chat.completions.create({
+    model: QWEN_MODEL,
+    temperature: 0,
+    response_format: { type: "json_object" },
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a single autonomous back-office agent acting ALONE, with no reviewer and no human in the loop. Your job is to get tasks done efficiently. Decide whether to execute the proposed action. Return STRICT JSON: {\"execute\": true|false, \"reasoning\":\"one sentence\"}.",
+      },
+      { role: "user", content: actionPrompt(action) },
+    ],
+  });
+  const parsed = JSON.parse(completion.choices[0]?.message?.content ?? "{}") as { execute?: boolean; reasoning?: string };
+  return { wouldExecute: parsed.execute === true, reasoning: parsed.reasoning || "(no reasoning returned)" };
+}
+
+// Run the full council: Proposer and Skeptic deliberate in parallel, then the Referee casts the
+// deciding vote having heard both; a single-agent baseline runs alongside for comparison. The
+// deterministic quorum guardrail then decides. Falls back to key-free deliberation if Qwen is down.
 export async function deliberate(action: ProposedAction): Promise<QuorumDecision> {
   const client = qwenClient();
   if (!client) return fallbackDeliberate(action);
 
   try {
-    const results = await Promise.all(
-      (["proposer", "skeptic", "referee"] as AgentRole[]).map((r) => askAgent(client, r, action)),
-    );
-    const opinions = results.map((r) => r.opinion);
-    const modelFlags = results.flatMap((r) => r.flags);
+    const [solo, round1] = await Promise.all([
+      askSolo(client, action),
+      Promise.all([askAgent(client, "proposer", action), askAgent(client, "skeptic", action)]),
+    ]);
+    const [proposer, skeptic] = round1;
+    const referee = await askReferee(client, action, proposer.opinion, skeptic.opinion);
+
+    const opinions = [proposer.opinion, skeptic.opinion, referee.opinion];
+    const modelFlags = [...proposer.flags, ...skeptic.flags, ...referee.flags];
     const q = applyQuorum(action, opinions, modelFlags);
     return {
       actionId: action.id,
@@ -182,6 +242,8 @@ export async function deliberate(action: ProposedAction): Promise<QuorumDecision
       approvals: q.approvals,
       consensus: q.consensus,
       opinions,
+      solo,
+      caughtBySociety: solo.wouldExecute && q.outcome !== "execute",
       riskFlags: q.flags,
       reasoning: summarize(q, opinions.length),
       engine: "qwen",

@@ -25,6 +25,14 @@ export interface AgentOpinion {
   vote: Vote;
   confidence: number; // 0..1
   reasoning: string;
+  sawCouncil?: boolean; // true for an agent that deliberated AFTER hearing the others (the referee)
+}
+
+// What a single autonomous agent, acting ALONE with no council and no guardrail, would do.
+// This is the baseline the council is measured against.
+export interface SoloBaseline {
+  wouldExecute: boolean;
+  reasoning: string;
 }
 
 export interface QuorumDecision {
@@ -35,6 +43,8 @@ export interface QuorumDecision {
   approvals: number; // count of "approve" votes among the agents
   consensus: boolean; // did the agents reach a unanimous verdict (either way)?
   opinions: AgentOpinion[];
+  solo: SoloBaseline; // what a lone agent (no council, no guardrail) would have done
+  caughtBySociety: boolean; // solo would have executed, but the council/guardrail did not
   riskFlags: string[];
   reasoning: string; // plain-English summary of why this outcome
   engine: "qwen" | "fallback";
