@@ -276,6 +276,7 @@ export default function Page() {
 
   const done = Object.values(cells).filter((d): d is QuorumDecision => !!d && d !== "loading");
   const executed = done.filter((d) => d.outcome === "execute").length;
+  const denied = done.filter((d) => d.outcome === "reject").length;
   const esc = done.filter((d) => d.outcome === "escalate").length;
   const held = done.filter((d) => d.heldBack).length;
   const caught = done.filter((d) => d.caughtBySociety).length;
@@ -343,10 +344,11 @@ export default function Page() {
 
       {/* Stats */}
       {done.length > 0 && (
-        <div className="grid grid-cols-3 gap-3.5 mt-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mt-12">
           <Stat n={executed} label="auto-executed by consensus" color="var(--acc)" i={0} />
-          <Stat n={esc} label="escalated to a human" color="var(--amber)" i={1} />
-          <Stat n={held} label="approved actions the guardrail held back" color="var(--acc2)" i={2} />
+          <Stat n={denied} label="auto-denied by the council" color="var(--red)" i={1} />
+          <Stat n={esc} label="escalated to a human" color="var(--amber)" i={2} />
+          <Stat n={held} label="held back despite consensus" color="var(--acc2)" i={3} />
         </div>
       )}
 
@@ -493,7 +495,7 @@ function CountUp({ n }: { n: number }) {
     let raf = 0;
     const t0 = performance.now();
     const tick = (t: number) => {
-      const p = Math.min(1, (t - t0) / 240); // quick tween from previous value (keeps pace live)
+      const p = Math.min(1, (t - t0) / 150); // quick tween from previous value (keeps pace live)
       setV(Math.round(from + (n - from) * p));
       if (p < 1) raf = requestAnimationFrame(tick);
     };
