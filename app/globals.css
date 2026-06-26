@@ -40,7 +40,7 @@ html, body {
     radial-gradient(46% 42% at 89% -8%, rgba(255,122,140,0.16), transparent 60%),    /* skeptic, top-right (rose) */
     linear-gradient(180deg, #0a0f21 0%, #0b1329 47%, #090d1e 100%);
 }
-.qr-orb { position: absolute; border-radius: 50%; filter: blur(98px); mix-blend-mode: screen; will-change: transform; backface-visibility: hidden; opacity: 0.5; }
+.qr-orb { position: absolute; border-radius: 50%; filter: blur(104px); mix-blend-mode: screen; will-change: transform; backface-visibility: hidden; opacity: 0.36; }
 .qr-grid {
   position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.5;
   background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
@@ -68,7 +68,7 @@ html, body {
 @keyframes qr-d3 { to { transform: translate3d(-46px, 64px, 0) scale(1.12); } }
 
 .qr-grain {
-  position: fixed; inset: 0; z-index: 60; pointer-events: none; opacity: 0.04;
+  position: fixed; inset: 0; z-index: 60; pointer-events: none; opacity: 0.07;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -81,13 +81,14 @@ html, body {
 }
 .qr-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 10px var(--acc); }
 .qr-title {
-  font-weight: 800; letter-spacing: -0.04em; text-wrap: balance;
-  background: linear-gradient(176deg, #ffffff 0%, #dbe6ff 52%, #9fd6ee 100%);
+  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+  font-weight: 600; letter-spacing: -0.025em; text-wrap: balance; line-height: 0.92;
+  background: linear-gradient(174deg, #fbfaf5 0%, #eef1f8 54%, #cde2ee 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(0 2px 26px rgba(4, 8, 22, 0.5));
+  filter: drop-shadow(0 2px 30px rgba(4, 8, 22, 0.55));
 }
 .qr-num { font-variant-numeric: tabular-nums; }
-.qr-kicker { color: #b8c6ff; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; font-size: 11px; text-shadow: 0 1px 6px rgba(4, 8, 20, 0.6); }
+.qr-kicker { font-family: var(--font-serif), Georgia, serif; font-style: italic; color: #cdd6ee; font-weight: 500; letter-spacing: 0; text-transform: none; font-size: 20px; }
 .qr-sig {
   font-weight: 700; letter-spacing: -0.01em;
   background: linear-gradient(90deg, var(--acc) 0%, var(--acc2) 60%, var(--approve) 100%);
