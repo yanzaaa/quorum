@@ -72,11 +72,11 @@ function StagedDecision({ d, onResolved }: { d: QuorumDecision; onResolved?: () 
     setFlipped(false);
     const proposer = d.opinions.find((o) => o.role === "proposer");
     const t: number[] = [];
-    t.push(window.setTimeout(() => setStage(1), 160));
-    t.push(window.setTimeout(() => setStage(2), 820));
-    if (proposer?.revisedFrom) t.push(window.setTimeout(() => setFlipped(true), 1360));
-    t.push(window.setTimeout(() => setStage(3), 1600));
-    t.push(window.setTimeout(() => { setStage(4); resolvedRef.current?.(); }, 2180));
+    t.push(window.setTimeout(() => setStage(1), 70));
+    t.push(window.setTimeout(() => setStage(2), 410));
+    if (proposer?.revisedFrom) t.push(window.setTimeout(() => setFlipped(true), 720));
+    t.push(window.setTimeout(() => setStage(3), 900));
+    t.push(window.setTimeout(() => { setStage(4); resolvedRef.current?.(); }, 1150));
     return () => t.forEach((x) => clearTimeout(x));
   }, [d]);
 
@@ -255,7 +255,7 @@ export default function Page() {
         }
       }
     };
-    await Promise.all(Array.from({ length: 3 }, worker));
+    await Promise.all(Array.from({ length: 4 }, worker));
     setRunning(false);
   }
 
