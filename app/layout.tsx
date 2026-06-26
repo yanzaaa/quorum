@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
+import MatrixRain from "@/components/MatrixRain";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -29,13 +30,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${jakarta.variable} ${fraunces.variable}`}>
       <body>
-        <div className="qr-bg" aria-hidden>
-          <span className="qr-orb a" />
-          <span className="qr-orb b" />
-          <span className="qr-orb c" />
-          <span className="qr-veil" />
-        </div>
-        <div className="qr-grid" aria-hidden />
+        <div className="qr-bg" aria-hidden />
+        <MatrixRain />
+        <div className="qr-veil" aria-hidden />
         <div className="qr-grain" aria-hidden />
         {children}
       </body>

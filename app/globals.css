@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #090d1c;         /* deliberation-chamber navy (cooler + distinct from the aurora elsewhere) */
-  --ink: #eef1fb;
-  --mut: #aeb6d4;
-  --acc: #8aa0ff;        /* brand: periwinkle indigo (the council) */
-  --acc2: #5fe6ff;       /* referee cyan / held-back */
-  --approve: #43e5a0;    /* proposer · execute (mint) */
-  --red: #ff7a8c;        /* skeptic · reject (rose) */
-  --amber: #f4b942;      /* verdict · escalate (gold) */
-  --card: rgba(13, 18, 38, 0.86);
-  --hair: rgba(255, 255, 255, 0.08);
+  --bg: #03070a;         /* matrix black */
+  --ink: #dffbe9;        /* phosphor white-green */
+  --mut: #7ea892;        /* muted green-grey */
+  --acc: #36ff9c;        /* matrix phosphor green (brand) */
+  --acc2: #5fe6ff;       /* referee cyan */
+  --approve: #36ff9c;    /* proposer · execute (matrix green) */
+  --red: #ff5d6c;        /* skeptic · reject */
+  --amber: #f4cf52;      /* verdict · escalate (gold) */
+  --card: rgba(6, 16, 12, 0.82);
+  --hair: rgba(78, 255, 168, 0.14);
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -26,46 +26,23 @@ html, body {
   letter-spacing: -0.01em;
 }
 
-/* ---------- the deliberation chamber (fixed layer, no scroll repaint) ----------
-   Distinct from the aurora used elsewhere: a calm deep-navy council chamber. Three
-   colored "voices" glow above (proposer = mint, referee = cyan, skeptic = rose) and a
-   single gold "verdict" glow rises from below — three voices converging on one ruling. */
+/* ---------- the matrix (fixed layers) ----------
+   Near-black base + faint green glow, a falling-glyph canvas (MatrixRain), then a
+   legibility veil so the council + cards stay crisp over the rain. */
 .qr-bg {
-  position: fixed; inset: 0; z-index: -2; pointer-events: none; overflow: hidden;
-  contain: layout paint size; isolation: isolate;
+  position: fixed; inset: 0; z-index: -3; pointer-events: none;
   background:
-    radial-gradient(72% 55% at 50% 118%, rgba(244,185,66,0.16), transparent 64%),   /* verdict glow rising from below (gold) */
-    radial-gradient(46% 42% at 11% -8%, rgba(67,229,160,0.17), transparent 60%),     /* proposer, top-left (mint) */
-    radial-gradient(42% 40% at 50% -13%, rgba(95,230,255,0.17), transparent 60%),    /* referee, top-center (cyan) */
-    radial-gradient(46% 42% at 89% -8%, rgba(255,122,140,0.16), transparent 60%),    /* skeptic, top-right (rose) */
-    linear-gradient(180deg, #0a0f21 0%, #0b1329 47%, #090d1e 100%);
+    radial-gradient(85% 60% at 50% -6%, rgba(24,74,49,0.42), transparent 62%),
+    radial-gradient(70% 55% at 50% 108%, rgba(15,56,39,0.40), transparent 60%),
+    #03070a;
 }
-.qr-orb { position: absolute; border-radius: 50%; filter: blur(104px); mix-blend-mode: screen; will-change: transform; backface-visibility: hidden; opacity: 0.36; }
-.qr-grid {
-  position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.5;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-  background-size: 34px 34px;
-  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 78%);
-  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 78%);
-}
-
-/* anchor orbs add bloom over the mesh */
-/* large soft color fields that slowly drift + breathe, so the aurora feels
-   alive and undulating (no specks, no glitter) */
-.qr-orb.a { width: 560px; height: 560px; background: #2fae74; top: -240px; left: -140px; animation: qr-d1 34s var(--ease) infinite alternate; }   /* proposer (mint) */
-.qr-orb.b { width: 540px; height: 540px; background: #2f9fd0; top: -260px; left: 50%; margin-left: -270px; animation: qr-d2 40s var(--ease) infinite alternate; } /* referee (cyan) */
-.qr-orb.c { width: 560px; height: 560px; background: #c44a64; top: -240px; right: -140px; animation: qr-d3 38s var(--ease) infinite alternate; }  /* skeptic (rose) */
-
-/* soft legibility scrim over the navy chamber (cards are opaque) */
-.qr-veil { position: absolute; inset: 0; pointer-events: none;
+.qr-matrix { position: fixed; inset: 0; z-index: -2; pointer-events: none; opacity: 0.68; }
+.qr-veil {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(125% 100% at 50% 36%, rgba(6,10,24,0) 25%, rgba(6,10,24,0.66) 100%),
-    linear-gradient(180deg, rgba(7,11,26,0.56) 0%, rgba(7,11,26,0.34) 27%, rgba(7,11,26,0.3) 50%, rgba(7,11,26,0.4) 75%, rgba(7,11,26,0.6) 100%);
+    radial-gradient(105% 78% at 50% 38%, rgba(3,7,9,0.74) 26%, rgba(3,7,9,0.40) 100%),
+    linear-gradient(180deg, rgba(3,7,9,0.52) 0%, rgba(3,7,9,0.30) 30%, rgba(3,7,9,0.32) 70%, rgba(3,7,9,0.56) 100%);
 }
-
-@keyframes qr-d1 { to { transform: translate3d(46px, 64px, 0) scale(1.12); } }
-@keyframes qr-d2 { to { transform: translate3d(0, 80px, 0) scale(1.15); } }
-@keyframes qr-d3 { to { transform: translate3d(-46px, 64px, 0) scale(1.12); } }
 
 .qr-grain {
   position: fixed; inset: 0; z-index: 60; pointer-events: none; opacity: 0.07;
@@ -83,12 +60,12 @@ html, body {
 .qr-title {
   font-family: var(--font-serif), Georgia, "Times New Roman", serif;
   font-weight: 600; letter-spacing: -0.025em; text-wrap: balance; line-height: 0.92;
-  background: linear-gradient(174deg, #fbfaf5 0%, #eef1f8 54%, #cde2ee 100%);
+  background: linear-gradient(176deg, #eafff4 0%, #84ffc4 52%, #2fe98f 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(0 2px 30px rgba(4, 8, 22, 0.55));
+  filter: drop-shadow(0 0 28px rgba(54, 255, 156, 0.32));
 }
 .qr-num { font-variant-numeric: tabular-nums; }
-.qr-kicker { font-family: var(--font-serif), Georgia, serif; font-style: italic; color: #cdd6ee; font-weight: 500; letter-spacing: 0; text-transform: none; font-size: 20px; }
+.qr-kicker { font-family: var(--font-serif), Georgia, serif; font-style: italic; color: #95edbc; font-weight: 500; letter-spacing: 0; text-transform: none; font-size: 20px; }
 .qr-sig {
   font-weight: 700; letter-spacing: -0.01em;
   background: linear-gradient(90deg, var(--acc) 0%, var(--acc2) 60%, var(--approve) 100%);
@@ -104,7 +81,7 @@ html, body {
 }
 .qr-mark { font-weight: 800; letter-spacing: -0.01em; font-size: 15px; color: var(--ink); display: inline-flex; align-items: center; gap: 6px; }
 .qr-mark .sub { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--acc); align-self: center; }
-.qr-glyph { width: 13px; height: 13px; border-radius: 4px; background: linear-gradient(135deg, var(--acc), var(--acc2)); box-shadow: 0 0 12px rgba(138, 160, 255, 0.6); display: inline-block; transform: rotate(45deg); }
+.qr-glyph { width: 13px; height: 13px; border-radius: 4px; background: linear-gradient(135deg, var(--acc), var(--acc2)); box-shadow: 0 0 12px rgba(54, 255, 156, 0.6); display: inline-block; transform: rotate(45deg); }
 .qr-x { color: var(--mut); font-size: 13px; font-weight: 500; }
 .qr-mark-dev { color: #e8edf6; }
 .qr-lockup-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mut); border-left: 1px solid var(--hair); padding-left: 12px; }
@@ -127,12 +104,12 @@ html, body {
 /* ---------- magnetic button ---------- */
 .qr-btn {
   display: inline-flex; align-items: center; gap: 12px;
-  background: linear-gradient(180deg, #8ee7f1, #4fbfdb); color: #06212b;
+  background: linear-gradient(180deg, #62ffb0, #22d97e); color: #03150c;
   border: 0; border-radius: 999px; padding: 11px 13px 11px 22px; font-weight: 700; font-size: 15px; cursor: pointer;
-  box-shadow: 0 10px 30px -10px rgba(79, 191, 219, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: 0 10px 30px -10px rgba(54, 255, 156, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
   transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease), filter 0.2s;
 }
-.qr-btn:hover { box-shadow: 0 16px 42px -12px rgba(79, 191, 219, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.45); }
+.qr-btn:hover { box-shadow: 0 16px 42px -12px rgba(54, 255, 156, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.45); }
 .qr-btn:active { transform: scale(0.97); }
 .qr-btn:disabled { opacity: 0.5; cursor: default; }
 .qr-btn .ico {
@@ -157,7 +134,7 @@ html, body {
 @keyframes qr-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(246, 192, 101, 0); } 50% { box-shadow: 0 0 20px 0 rgba(246, 192, 101, 0.22); } }
 .qr-flag { font-size: 11px; color: #cdd6e3; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--hair); border-radius: 7px; padding: 2px 8px; }
 .qr-engine-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--mut); flex-shrink: 0; }
-.qr-engine-dot[data-engine="qwen"] { background: var(--acc); box-shadow: 0 0 8px rgba(138, 160, 255, 0.6); }
+.qr-engine-dot[data-engine="qwen"] { background: var(--acc); box-shadow: 0 0 8px rgba(54, 255, 156, 0.65); }
 /* multi-agent council vote rows */
 .qm-role { width: 64px; flex-shrink: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mut); padding-top: 2px; }
 .qm-vote { flex-shrink: 0; width: 58px; text-align: center; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 1px 0; border: 1px solid; }
@@ -168,9 +145,9 @@ html, body {
 .qr-solo-decline { color: var(--mut); font-weight: 600; }
 .qr-caught { color: var(--approve); font-weight: 700; font-size: 11px; border: 1px solid rgba(67, 229, 160, 0.4); background: rgba(67, 229, 160, 0.08); border-radius: 999px; padding: 1px 9px; }
 .qr-revised { color: var(--amber); font-weight: 700; font-size: 10.5px; border: 1px solid rgba(244, 185, 66, 0.4); background: rgba(244, 185, 66, 0.1); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
-.qr-deliberating { font-size: 11px; color: var(--acc2); font-style: italic; white-space: nowrap; animation: qr-pulse 1.15s ease-in-out infinite; }
-@keyframes qr-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
-.qr-headline { border: 1px solid var(--hair); background: linear-gradient(180deg, rgba(138,160,255,0.10), rgba(95,230,255,0.03)); border-radius: 14px; padding: 14px 18px; font-size: 15px; color: var(--ink); }
+.qr-deliberating { font-size: 11px; color: var(--acc2); font-style: italic; white-space: nowrap; animation: qr-blink 1.15s ease-in-out infinite; }
+@keyframes qr-blink { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+.qr-headline { border: 1px solid var(--hair); background: linear-gradient(180deg, rgba(54,255,156,0.10), rgba(54,255,156,0.03)); border-radius: 14px; padding: 14px 18px; font-size: 15px; color: var(--ink); }
 .qr-headline b { color: var(--acc); font-variant-numeric: tabular-nums; }
 
 /* ---------- the council band (structural identity: three named voices -> a verdict) ---------- */
@@ -196,7 +173,7 @@ html, body {
 
 /* ---------- inputs ---------- */
 .qr-input { background: rgba(0, 0, 0, 0.3); border: 1px solid var(--hair); border-radius: 11px; padding: 10px 12px; font-size: 13px; color: var(--ink); width: 100%; outline: none; transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease); }
-.qr-input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px rgba(138, 160, 255, 0.18); }
+.qr-input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px rgba(54, 255, 156, 0.2); }
 .qr-input::placeholder { color: #6a6480; }
 .qr-label { font-size: 11px; color: var(--mut); margin-bottom: 5px; display: block; letter-spacing: 0.02em; }
 

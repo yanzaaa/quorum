@@ -298,7 +298,7 @@ export default function Page() {
             Quorum
           </motion.h1>
           <motion.p variants={item} className="text-[clamp(18px,2.2vw,23px)] text-[#d3cee0] mt-4 max-w-[46rem] leading-[1.5]" style={{ textShadow: "0 1px 16px rgba(8,4,20,0.55)" }}>
-            A council of agents that knows when a vote is not <span className="text-[#5fe6ff] font-semibold">enough</span>.
+            A council of agents that knows when a vote is not <span className="text-[#36ff9c] font-semibold">enough</span>.
             Three Qwen agents debate every consequential action, and a deterministic guardrail refuses to execute without consensus, escalating the irreversible to a human.
           </motion.p>
           <motion.div variants={item} className="flex flex-wrap items-center gap-3 mt-9">
@@ -484,13 +484,17 @@ function Stat({ n, label, color, i }: { n: number; label: string; color: string;
 }
 
 function CountUp({ n }: { n: number }) {
-  const [v, setV] = useState(0);
+  const [v, setV] = useState(n);
+  const prev = useRef(n);
   useEffect(() => {
+    const from = prev.current;
+    prev.current = n;
+    if (from === n) { setV(n); return; }
     let raf = 0;
-    const start = performance.now();
+    const t0 = performance.now();
     const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / 520);
-      setV(Math.round(p * n));
+      const p = Math.min(1, (t - t0) / 240); // quick tween from previous value (keeps pace live)
+      setV(Math.round(from + (n - from) * p));
       if (p < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
