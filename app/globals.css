@@ -168,6 +168,8 @@ html, body {
 .qr-solo-decline { color: var(--mut); font-weight: 600; }
 .qr-caught { color: var(--approve); font-weight: 700; font-size: 11px; border: 1px solid rgba(67, 229, 160, 0.4); background: rgba(67, 229, 160, 0.08); border-radius: 999px; padding: 1px 9px; }
 .qr-revised { color: var(--amber); font-weight: 700; font-size: 10.5px; border: 1px solid rgba(244, 185, 66, 0.4); background: rgba(244, 185, 66, 0.1); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+.qr-deliberating { font-size: 11px; color: var(--acc2); font-style: italic; white-space: nowrap; animation: qr-pulse 1.15s ease-in-out infinite; }
+@keyframes qr-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
 .qr-headline { border: 1px solid var(--hair); background: linear-gradient(180deg, rgba(138,160,255,0.10), rgba(95,230,255,0.03)); border-radius: 14px; padding: 14px 18px; font-size: 15px; color: var(--ink); }
 .qr-headline b { color: var(--acc); font-variant-numeric: tabular-nums; }
 

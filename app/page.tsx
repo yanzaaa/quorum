@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import dynamic from "next/dynamic";
 import { QUEUE } from "@/lib/data";
 import type { ProposedAction, QuorumDecision } from "@/lib/types";
@@ -59,63 +59,157 @@ function Tilt({ children, className }: { children: React.ReactNode; className?: 
   );
 }
 
-function DecisionBody({ d }: { d: QuorumDecision }) {
+// The council deliberating, live: each agent's vote lands in turn, the proposer's vote visibly
+// flips after the skeptic, then the verdict resolves. onResolved fires when the ruling is in.
+function StagedDecision({ d, onResolved }: { d: QuorumDecision; onResolved?: () => void }) {
+  const [stage, setStage] = useState(0); // 1 proposer · 2 skeptic · 3 referee · 4 verdict
+  const [flipped, setFlipped] = useState(false);
+  const resolvedRef = useRef(onResolved);
+  resolvedRef.current = onResolved;
+
+  useEffect(() => {
+    setStage(0);
+    setFlipped(false);
+    const proposer = d.opinions.find((o) => o.role === "proposer");
+    const t: number[] = [];
+    t.push(window.setTimeout(() => setStage(1), 160));
+    t.push(window.setTimeout(() => setStage(2), 820));
+    if (proposer?.revisedFrom) t.push(window.setTimeout(() => setFlipped(true), 1360));
+    t.push(window.setTimeout(() => setStage(3), 1600));
+    t.push(window.setTimeout(() => { setStage(4); resolvedRef.current?.(); }, 2180));
+    return () => t.forEach((x) => clearTimeout(x));
+  }, [d]);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: EASE }}
-      className="mt-3 pt-3"
-      style={{ borderTop: "1px solid var(--hair)" }}
-    >
-      {/* The three-agent council */}
+    <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--hair)" }}>
+      {/* The three voices, landing one at a time */}
       <div className="flex flex-col gap-2">
-        {d.opinions.map((o) => (
-          <div key={o.role} className="flex items-start gap-2.5">
-            <span className="qm-role">{o.role}</span>
-            <span className={`qm-vote ${o.vote === "approve" ? "v-approve" : "v-reject"}`}>
-              {o.vote === "approve" ? "approve" : "reject"}
-            </span>
-            <span className="qr-num text-[11px] text-[var(--mut)] w-[30px] shrink-0">{Math.round(o.confidence * 100)}%</span>
-            <span className="text-[12.5px] text-[#cdd6e3] flex-1">
-              {o.reasoning}
-              {o.revisedFrom && <>{" "}<span className="qr-revised">↺ changed from {o.revisedFrom} after the skeptic</span></>}
-            </span>
+        {d.opinions.map((o, i) => {
+          const shown = stage >= i + 1;
+          const isProp = o.role === "proposer";
+          const showFinal = !isProp || !o.revisedFrom || flipped;
+          const vote = showFinal ? o.vote : (o.revisedFrom as string);
+          return (
+            <motion.div
+              key={o.role}
+              initial={{ opacity: 0, y: 7, filter: "blur(4px)" }}
+              animate={shown ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 7, filter: "blur(4px)" }}
+              transition={{ duration: 0.4, ease: EASE }}
+              className="flex items-start gap-2.5"
+            >
+              <span className="qm-role">{o.role}</span>
+              <span className="relative inline-flex">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.span
+                    key={vote}
+                    initial={{ scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.7, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 460, damping: 20 }}
+                    className={`qm-vote ${vote === "approve" ? "v-approve" : "v-reject"}`}
+                  >
+                    {vote}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+              <span className="qr-num text-[11px] text-[var(--mut)] w-[30px] shrink-0">{Math.round(o.confidence * 100)}%</span>
+              <span className="text-[12.5px] text-[#cdd6e3] flex-1">
+                {o.reasoning}
+                {showFinal && o.revisedFrom && (
+                  <>{" "}
+                    <motion.span
+                      className="qr-revised"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 16 }}
+                    >
+                      ↺ changed from {o.revisedFrom} after the skeptic
+                    </motion.span>
+                  </>
+                )}
+              </span>
+            </motion.div>
+          );
+        })}
+      </div>
+      <motion.div animate={{ opacity: stage >= 3 ? 1 : 0 }} transition={{ duration: 0.4 }} className="text-[10.5px] text-[var(--mut)] mt-1.5 italic">
+        The referee votes last, after weighing the proposer and skeptic.
+      </motion.div>
+
+      {/* The ruling resolves */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={stage >= 4 ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        <div className="mt-3 text-[13.5px] text-[#dbe3ee]">{d.reasoning}</div>
+
+        <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[12px]">
+          <span className="text-[var(--mut)]">a lone agent would</span>
+          <span className={d.solo.wouldExecute ? "qr-solo-exec" : "qr-solo-decline"}>{d.solo.wouldExecute ? "execute" : "decline"}</span>
+          {d.caughtBySociety && <span className="qr-caught">✓ caught by the council</span>}
+        </div>
+
+        {d.riskFlags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2.5">
+            {d.riskFlags.map((f) => (<span key={f} className="qr-flag">{f}</span>))}
           </div>
-        ))}
-      </div>
-      <div className="text-[10.5px] text-[var(--mut)] mt-1.5 italic">The referee votes last, after weighing the proposer and skeptic.</div>
+        )}
 
-      {/* The quorum verdict */}
-      <div className="mt-3 text-[13.5px] text-[#dbe3ee]">{d.reasoning}</div>
+        {d.heldBack && (
+          <div className="qr-held mt-2.5">
+            ⚠ All {d.opinions.length} agents voted to approve, but the quorum guardrail held the action back and escalated. A unanimous council still cannot authorize a high-stakes or irreversible action without a human.
+          </div>
+        )}
 
-      {/* Single-agent baseline */}
-      <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[12px]">
-        <span className="text-[var(--mut)]">a lone agent would</span>
-        <span className={d.solo.wouldExecute ? "qr-solo-exec" : "qr-solo-decline"}>{d.solo.wouldExecute ? "execute" : "decline"}</span>
-        {d.caughtBySociety && <span className="qr-caught">✓ caught by the council</span>}
-      </div>
-
-      {d.riskFlags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mt-2.5">
-          {d.riskFlags.map((f) => (<span key={f} className="qr-flag">{f}</span>))}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2.5 text-[11px] text-[var(--mut)]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="qr-engine-dot" data-engine={d.engine} />
+            {d.engine === "qwen" ? `Deliberated by 3× ${d.model ?? "qwen-max"}` : "deterministic fallback"}
+          </span>
+          <span>· quorum: <span className="qr-num">{d.approvals}/{d.opinions.length}</span> approve</span>
         </div>
-      )}
+      </motion.div>
+    </div>
+  );
+}
 
-      {d.heldBack && (
-        <div className="qr-held mt-2.5">
-          ⚠ All {d.opinions.length} agents voted to approve, but the quorum guardrail held the action back and escalated. A unanimous council still cannot authorize a high-stakes or irreversible action without a human.
+// One queue card: shows "deliberating…" while the council runs, then stamps in the verdict tag
+// and reveals the colored edge only once the ruling is in.
+function QueueCard({ a, cell }: { a: ProposedAction; cell: Cell }) {
+  const d = cell && cell !== "loading" ? cell : null;
+  const m = d ? META[d.outcome] : null;
+  const [resolved, setResolved] = useState(false);
+  useEffect(() => { setResolved(false); }, [d]);
+  return (
+    <Tilt className={`glass p-5 ${m && resolved ? m.edge : ""}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[15px] font-semibold">
+            {a.title} <span className="text-[var(--mut)] font-normal">· {a.id}</span>
+          </div>
+          <div className="qr-num text-[13px] text-[var(--mut)] mt-0.5">
+            {a.domain} · {a.stakes} stakes · {a.reversible ? "reversible" : "irreversible"}
+          </div>
         </div>
-      )}
-
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2.5 text-[11px] text-[var(--mut)]">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="qr-engine-dot" data-engine={d.engine} />
-          {d.engine === "qwen" ? `Deliberated by 3× ${d.model ?? "qwen-max"}` : "deterministic fallback"}
-        </span>
-        <span>· quorum: <span className="qr-num">{d.approvals}/{d.opinions.length}</span> approve</span>
+        {cell === "loading" ? (
+          <div className="spin mt-1" />
+        ) : d && !resolved ? (
+          <span className="qr-deliberating">deliberating…</span>
+        ) : m && resolved ? (
+          <motion.span
+            className={`qr-tag ${m.tag}`}
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 380, damping: 15 }}
+          >
+            {m.label}
+          </motion.span>
+        ) : null}
       </div>
-    </motion.div>
+      <div className="text-[13.5px] text-[#cdd6e3] mt-2.5">{a.description}</div>
+      {d && <StagedDecision d={d} onResolved={() => setResolved(true)} />}
+    </Tilt>
   );
 }
 
@@ -131,6 +225,7 @@ export default function Page() {
     justified: true,
   });
   const [custom, setCustom] = useState<Cell>();
+  const [customResolved, setCustomResolved] = useState(false);
 
   async function send(action: ProposedAction): Promise<QuorumDecision | undefined> {
     const res = await fetch("/api/deliberate", {
@@ -166,6 +261,7 @@ export default function Page() {
 
   async function runCustom() {
     setCustom("loading");
+    setCustomResolved(false);
     const a: ProposedAction = {
       id: "CUSTOM",
       title: form.title,
@@ -276,30 +372,11 @@ export default function Page() {
         <span className="qr-legend"><span className="qr-dot" style={{ background: "var(--acc2)" }} /> Held back — unanimous but irreversible</span>
       </Reveal>
       <div className="grid md:grid-cols-2 gap-3.5" style={{ perspective: 1200 }}>
-        {QUEUE.map((a, idx) => {
-          const cell = cells[a.id];
-          const d = cell && cell !== "loading" ? cell : null;
-          const m = d ? META[d.outcome] : null;
-          return (
-            <Reveal key={a.id} delay={Math.min(idx * 0.04, 0.3)}>
-              <Tilt className={`glass p-5 ${m ? m.edge : ""}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-[15px] font-semibold">
-                      {a.title} <span className="text-[var(--mut)] font-normal">· {a.id}</span>
-                    </div>
-                    <div className="qr-num text-[13px] text-[var(--mut)] mt-0.5">
-                      {a.domain} · {a.stakes} stakes · {a.reversible ? "reversible" : "irreversible"}
-                    </div>
-                  </div>
-                  {cell === "loading" ? <div className="spin mt-1" /> : m ? <span className={`qr-tag ${m.tag}`}>{m.label}</span> : null}
-                </div>
-                <div className="text-[13.5px] text-[#cdd6e3] mt-2.5">{a.description}</div>
-                {d && <DecisionBody d={d} />}
-              </Tilt>
-            </Reveal>
-          );
-        })}
+        {QUEUE.map((a, idx) => (
+          <Reveal key={a.id} delay={Math.min(idx * 0.04, 0.3)}>
+            <QueueCard a={a} cell={cells[a.id]} />
+          </Reveal>
+        ))}
       </div>
 
       {/* Human review */}
@@ -334,7 +411,7 @@ export default function Page() {
       <Reveal className="qr-kicker mt-20 mb-4">Propose your own action</Reveal>
       <Reveal>
         <div className="qr-shell">
-          <div className={`qr-core p-5 ${customMeta ? customMeta.edge : ""}`}>
+          <div className={`qr-core p-5 ${customMeta && customResolved ? customMeta.edge : ""}`}>
             <p className="text-[13px] text-[var(--mut)] mb-3.5">
               Not a canned demo. Describe any action and send it to the live three-agent council.
             </p>
@@ -359,9 +436,20 @@ export default function Page() {
                 <span>{custom === "loading" ? "Deliberating" : "Convene the council"}</span>
                 <span className="ico">{custom === "loading" ? <span className="spin" /> : "▶"}</span>
               </button>
-              {customMeta && <span className={`qr-tag ${customMeta.tag}`}>{customMeta.label}</span>}
+              {customDec && !customResolved ? (
+                <span className="qr-deliberating">deliberating…</span>
+              ) : customMeta && customResolved ? (
+                <motion.span
+                  className={`qr-tag ${customMeta.tag}`}
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 15 }}
+                >
+                  {customMeta.label}
+                </motion.span>
+              ) : null}
             </div>
-            {customDec && <DecisionBody d={customDec} />}
+            {customDec && <StagedDecision d={customDec} onResolved={() => setCustomResolved(true)} />}
           </div>
         </div>
       </Reveal>
