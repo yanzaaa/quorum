@@ -344,11 +344,10 @@ export default function Page() {
 
       {/* Stats */}
       {done.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mt-12">
+        <div className="grid grid-cols-3 gap-3.5 mt-12">
           <Stat n={executed} label="auto-executed by consensus" color="var(--acc)" i={0} />
           <Stat n={denied} label="auto-denied by the council" color="var(--red)" i={1} />
-          <Stat n={esc} label="escalated to a human" color="var(--amber)" i={2} />
-          <Stat n={held} label="held back despite consensus" color="var(--acc2)" i={3} />
+          <Stat n={esc} label={held > 0 ? "held back / sent to a human" : "escalated to a human"} color="var(--amber)" i={2} />
         </div>
       )}
 
