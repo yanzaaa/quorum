@@ -224,6 +224,27 @@ export default function Page() {
         </motion.div>
       </div>
 
+      {/* The council — names the three voices: structural identity no sibling project has */}
+      <Reveal className="qr-kicker mt-16 mb-4">The council</Reveal>
+      <Reveal className="qr-council">
+        <div className="qr-voice" data-role="proposer">
+          <div className="qr-voice-head"><span className="qr-voice-dot" />Proposer</div>
+          <p>Argues <em>for</em> the action — the optimistic operator that wants to get the task done.</p>
+        </div>
+        <div className="qr-voice" data-role="skeptic">
+          <div className="qr-voice-head"><span className="qr-voice-dot" />Skeptic</div>
+          <p>Hunts for what breaks — fraud, abuse, the quietly irreversible.</p>
+        </div>
+        <div className="qr-voice" data-role="referee">
+          <div className="qr-voice-head"><span className="qr-voice-dot" />Referee</div>
+          <p>Votes last, after hearing both — and can be talked out of a position.</p>
+        </div>
+      </Reveal>
+      <Reveal className="qr-verdict-bar">
+        <span className="qr-verdict-dot" />
+        <span><b>Then the guardrail rules.</b> Execute only on unanimity, escalate on a split — and hold back the irreversible even when all three agree.</span>
+      </Reveal>
+
       {/* Stats */}
       {done.length > 0 && (
         <div className="grid grid-cols-3 gap-3.5 mt-12">
