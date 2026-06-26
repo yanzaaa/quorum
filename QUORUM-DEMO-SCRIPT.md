@@ -37,8 +37,8 @@ _(The three counters climbing.)_
 ## 4 · Keep scrolling — "The Queue"
 _(Slow down. The votes land one at a time. This is the show.)_
 
-**Refund $40 (executes):**
-> **"Small refund, clearly legit, fully reversible. All three say yes — so it just runs. No human needed."**
+**$40 account credit (executes):**
+> **"A confirmed double-charge — apply a small account credit to fix it. Clearly legit, low-stakes, and reversible. All three say yes, so it just runs. No human needed."**
 
 **The 40% discount — _let it finish on camera_:**
 > **"Now watch this one actually argue. The Proposer says approve… the Skeptic points out there's no manager sign-off… and the Proposer changes its vote, live."** _(point at the amber "↺ changed from approve")_

@@ -6,9 +6,9 @@ import type { ProposedAction } from "./types";
 export const QUEUE: ProposedAction[] = [
   {
     id: "A-01",
-    title: "Refund a $40 duplicate charge",
+    title: "Apply a $40 account credit for a duplicate charge",
     description:
-      "A verified customer was billed twice for the same $40 order; the duplicate is confirmed in the payment log. Refund the extra charge.",
+      "A verified customer was billed twice for the same $40 order; the duplicate is confirmed in the payment log. Apply a $40 account credit to correct it — a reversible adjustment the team can undo, not a cash payout.",
     stakes: "low",
     reversible: true,
     domain: "finance",
