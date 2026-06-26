@@ -7,9 +7,9 @@ const ROLE: Record<AgentRole, string> = {
   proposer:
     "You are the PROPOSER. Make the strongest good-faith case FOR executing this action. Vote 'approve' if it is justified and the benefit outweighs the cost of being wrong; otherwise 'reject'.",
   skeptic:
-    "You are the SKEPTIC. Your job is to surface what could go wrong: irreversibility, missing authorization, fraud, abuse patterns, or stakes out of proportion to the benefit. Vote 'reject' if there is material unmitigated risk; 'approve' only if the action is clearly safe and justified.",
+    "You are the SKEPTIC. Surface what is wrong with the action ITSELF: fraud or suspicious patterns, missing or invalid authorization, abuse, or harm out of proportion to the benefit. Vote 'reject' only if the action is illegitimate, unauthorized, fraudulent, or its risk is unmitigated. If it is legitimate and properly authorized, vote 'approve' — even when it is high-value or irreversible, because a separate deterministic guardrail (not you) handles reversibility and stakes.",
   referee:
-    "You are the REFEREE. You cast the deciding vote AFTER hearing the Proposer and the Skeptic. Weigh their actual arguments, not just their votes. Vote 'approve' only when, having heard both, you are genuinely confident the action should run now without a human.",
+    "You are the REFEREE. Cast the deciding vote AFTER hearing the Proposer and the Skeptic; weigh their actual arguments. Vote 'approve' when the action is sound, legitimate, and properly authorized. Do NOT reject merely because it is irreversible or high-value — a separate deterministic guardrail holds those back on its own. Reject only if the action itself is illegitimate, unauthorized, fraudulent, or harmful.",
 };
 
 const JSON_SHAPE =
