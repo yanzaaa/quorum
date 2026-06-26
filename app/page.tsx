@@ -288,7 +288,11 @@ export default function Page() {
     <main className="max-w-[1120px] mx-auto px-6 py-20 md:py-28">
       {/* Hero */}
       <div className="relative">
-        <div className="pointer-events-none absolute right-[-44px] top-[-120px] hidden md:block w-[420px] h-[420px] lg:w-[520px] lg:h-[520px] z-0 opacity-100" aria-hidden>
+        <div
+          className="pointer-events-none absolute right-[-44px] top-[-120px] hidden md:block w-[420px] h-[420px] lg:w-[520px] lg:h-[520px] z-0 opacity-100"
+          style={{ background: "radial-gradient(circle at 58% 47%, rgba(3,7,11,0.96) 34%, rgba(3,7,11,0.7) 52%, rgba(3,7,11,0) 72%)" }}
+          aria-hidden
+        >
           <Hero3D />
         </div>
         <motion.div variants={container} initial="hidden" animate="show" className="relative z-10">
@@ -326,7 +330,7 @@ export default function Page() {
       <Reveal className="qr-council">
         <div className="qr-voice" data-role="proposer">
           <div className="qr-voice-head"><span className="qr-voice-dot" />Proposer</div>
-          <p>Argues <em>for</em> the action — the optimistic operator that wants to get the task done.</p>
+          <p>Argues for the action — the optimistic operator that wants to get the task done.</p>
         </div>
         <div className="qr-voice" data-role="skeptic">
           <div className="qr-voice-head"><span className="qr-voice-dot" />Skeptic</div>

@@ -1,80 +1,79 @@
 # Quorum — demo script
 
 **Open:** https://quorum-sandy-omega.vercel.app
-**How to use this:** read the **bold** lines out loud, do the _(italic actions)_. It follows the page top-to-bottom — you click Run once at the top, then just keep scrolling down while you talk. ~2.5 min.
+Read the **bold** out loud, do the _(italics)_. It runs straight down the page — click Run once at the top, then keep scrolling. Aim for ~2 min, talk like a person.
 
 ---
 
-## 1 · Top of the page (the hero)
+## 1 · Top — the hero
+_(Start at the top, let the animation move for a beat.)_
 
-_(Start at the very top. Let the little 3D animation move for a second.)_
+> **"Most multi-agent demos throw a party when the agents agree. But agreement isn't permission. A room full of confident agents can still talk itself into something it can never take back."**
+>
+> **"Quorum is a council that knows when a vote isn't enough."**
 
-> **"This is Quorum. Most multi-agent demos get excited when the agents agree. But agreement isn't permission — a confident group of agents can still talk itself into something irreversible and be completely wrong. Quorum is a council that knows when a vote isn't enough."**
+_(Click **Run the council on the queue**, then start scrolling down — it's working while you talk.)_
 
-_(Click **Run the council on the queue**. Then start scrolling down slowly — it runs in the background while you talk.)_
-
-> **"I just put seven real decisions in front of it. Let's walk down and watch."**
+> **"I just handed it seven real decisions. Let's watch it work."**
 
 ---
 
 ## 2 · Scroll to "The Council"
+_(The three cards: Proposer, Skeptic, Referee, then the gold bar.)_
 
-_(The three labeled cards: Proposer, Skeptic, Referee, then the gold bar.)_
-
-> **"The council is three Qwen agents. A Proposer that argues for the action. A Skeptic that looks for what could go wrong. And a Referee that votes last, after hearing both. Then a fixed rule decides — and it can only ever make the outcome safer, never riskier."**
+> **"Three Qwen agents. The Proposer argues for the action. The Skeptic looks for what's wrong with it. The Referee votes last, after hearing both."**
+>
+> **"And then a hard rule sits on top of all of them — one that can only ever make the call safer."**
 
 ---
 
 ## 3 · Keep scrolling — the tally
+_(The three counters climbing.)_
 
-_(The three stat boxes + the "a lone agent would have executed…" line, filling in as cards resolve.)_
-
-> **"Up here the results add up as it goes — what it auto-approved, what it sent to a human, and what it held back."**
-
----
-
-## 4 · Keep scrolling — "The Queue" (cards deliberating live)
-
-_(Go slow here — the votes land one at a time. This is the good part.)_
-
-**First card — the $40 duplicate refund:**
-> **"This one's clearly safe and reversible. All three approve, so it just goes through. No human needed."**
-
-**Next — the 40% discount _(let it finish deliberating on camera)_:**
-> **"Watch this one actually happen. The Proposer approves it… then the Skeptic pushes back… and the Proposer changes its vote, live."** _(point at the amber "↺ changed from approve after the skeptic")_
-> **"That's the agents arguing it out — not just counting votes."**
-
-**Next two — the $50k wire and 'delete the database':**
-> **"A fifty-thousand-dollar wire from an emailed invoice, and wiping the customer database. The council rejects both on its own. A human never even sees them."**
-
-**The big one — the $12,000 payment:**
-> **"And here's the moment. This payment is already fully approved — all three agents vote yes, high confidence. And the guardrail still refuses to run it, and kicks it to a human."**
-> **"Because it's irreversible. A unanimous council still doesn't get to pull a trigger you can't undo. Consensus is necessary — but it's never enough."**
+> **"Up here the count moves in real time — what it ran, what it killed, and what it refused to touch."**
 
 ---
 
-## 5 · Keep scrolling — "Human review queue"
+## 4 · Keep scrolling — "The Queue"
+_(Slow down. The votes land one at a time. This is the show.)_
 
-> **"This is the only thing a person actually has to look at. Everything else the council handled by itself."**
+**Refund $40 (executes):**
+> **"Small refund, clearly legit, fully reversible. All three say yes — so it just runs. No human needed."**
+
+**The 40% discount — _let it finish on camera_:**
+> **"Now watch this one actually argue. The Proposer says approve… the Skeptic points out there's no manager sign-off… and the Proposer changes its vote, live."** _(point at the amber "↺ changed from approve")_
+> **"They're not counting votes. They're arguing."**
+
+**The $50k wire + delete-the-database:**
+> **"This one's a fifty-thousand-dollar wire — but the invoice showed up by email, from a brand-new vendor, with new bank details. That's a scam playbook. And this one wants to wipe the customer database to save space."**
+> **"The council kills both on its own. A person never even sees them."**
+
+**The $12,000 payment — the big one:**
+> **"And here's the moment. This payment is completely clean — signed contract, both managers, finance, no red flags. All three agents approve it."**
+> **"And it still gets stopped."** _(point at the held-back banner)_
+> **"Because it's irreversible. Even a unanimous, fully-approved council doesn't get to pull a trigger you can't undo — that goes to a human. Consensus is necessary. It's just never enough."**
 
 ---
 
-## 6 · Bottom — "Propose your own action"
+## 5 · Keep scrolling — "Human review"
+> **"This little list is the only thing a person actually has to look at. The council handled everything else by itself."**
 
-_(Optional. The box is pre-filled with a $12k irreversible payment.)_
+---
 
-> **"And it's not scripted — you can type any action and send it to the live council right here."** _(click **Convene the council**, let it deliberate.)_
+## 6 · Bottom — "Propose your own"
+_(Optional. Pre-filled with the $12k payment.)_
+
+> **"And none of this is canned — type any action and send it to the live council right here."** _(hit **Convene the council**, let it think.)_
 
 ---
 
 ## Close
-
-> **"So that's Quorum. A real three-agent council on Qwen, with one hard rule on top: no vote, not even a unanimous one, can authorize the irreversible. A group of agents that's safe because it knows when to stop."**
+> **"That's Quorum. A real council of agents on Qwen — with one rule they can't argue with: no vote, not even a unanimous one, gets to authorize the irreversible. Safe because it knows when to stop."**
 
 ---
 
-### Quick reminders
-- **Record at 1440 wide** so the cards and hero both read.
-- **Don't talk over the animations** — pause on the live vote-flip (the 40% discount) and the held-back $12k. Those are your two best moments.
-- The queue takes ~30–60s to fully resolve; narrate as cards land, you don't have to wait for all seven.
-- If you want the number in section 3 exact, glance at it on screen and read it ("a lone agent would have executed *one* of these") — it's usually 1–2.
+### Reminders
+- **Record at 1440 wide.**
+- **Don't talk over the animation** on the two big beats — the **40% vote-flip** and the **$12k held-back**. Let them breathe.
+- The queue finishes in ~10–15s; narrate as cards land.
+- Final tally you'll see: **2 executed · 4 auto-denied · 1 held back**.
