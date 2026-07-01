@@ -1,0 +1,193 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" font-family="'Plus Jakarta Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <defs>
+    <!-- Background: same dark navy -> purple wash as architecture.png -->
+    <radialGradient id="bgGlow" cx="26%" cy="8%" r="90%">
+      <stop offset="0%" stop-color="#241b4a"/>
+      <stop offset="42%" stop-color="#150f2e"/>
+      <stop offset="100%" stop-color="#080611"/>
+    </radialGradient>
+    <linearGradient id="cardFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.015"/>
+    </linearGradient>
+    <linearGradient id="guardFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f4cf52" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#f4cf52" stop-opacity="0.02"/>
+    </linearGradient>
+    <linearGradient id="mcpFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5fe6ff" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#5fe6ff" stop-opacity="0.02"/>
+    </linearGradient>
+    <linearGradient id="titleFill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f3fbf6"/>
+      <stop offset="60%" stop-color="#cdb8ff"/>
+      <stop offset="100%" stop-color="#9f8bff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8b7bd8"/>
+    </marker>
+    <marker id="arrowCyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5fe6ff"/>
+    </marker>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#bgGlow)"/>
+
+  <!-- Header -->
+  <g>
+    <circle cx="92" cy="76" r="5" fill="#a78bff"/>
+    <text x="108" y="82" fill="#a99cd8" font-size="19" font-weight="700" letter-spacing="4.5">QUORUM · SYSTEM ARCHITECTURE</text>
+    <!-- track pill (top-right) -->
+    <rect x="1420" y="58" width="410" height="40" rx="20" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <circle cx="1448" cy="78" r="5" fill="#a78bff"/>
+    <text x="1464" y="84" fill="#c9d2e6" font-size="17" font-weight="600">Qwen Cloud · Agent Society Track · Global AI Hackathon</text>
+  </g>
+
+  <!-- Title + subtitle -->
+  <text x="90" y="188" font-size="72" font-weight="800" fill="url(#titleFill)" letter-spacing="-1.5">How a request flows through Quorum</text>
+  <text x="92" y="242" fill="#9aa7c4" font-size="27" font-weight="400">Stateless Next.js on Vercel calls three Qwen agents on DashScope, then a deterministic guardrail rules — and an external</text>
+  <text x="92" y="278" fill="#9aa7c4" font-size="27" font-weight="400">MCP client reaches the exact same guardrail over stdio. No database. Nothing to persist.</text>
+
+  <!-- ================= ROW 1: the live request path ================= -->
+
+  <!-- 01 · BROWSER -->
+  <g>
+    <rect x="90" y="352" width="300" height="252" rx="20" fill="url(#cardFill)" stroke="#ffffff" stroke-opacity="0.10"/>
+    <text x="116" y="392" fill="#8f9bbd" font-size="17" font-weight="700" letter-spacing="2.5">01 · BROWSER</text>
+    <text x="116" y="432" fill="#f3f6fc" font-size="29" font-weight="700">Next.js UI</text>
+    <g fill="#c3cbe0" font-size="19">
+      <circle cx="124" cy="470" r="3.5" fill="#a78bff"/><text x="140" y="476">the deliberation chamber</text>
+      <circle cx="124" cy="504" r="3.5" fill="#a78bff"/><text x="140" y="510">run the queue · propose your own</text>
+      <circle cx="124" cy="538" r="3.5" fill="#a78bff"/><text x="140" y="544">renders every vote + verdict</text>
+    </g>
+    <text x="116" y="580" fill="#7f8bab" font-size="16">client component · React 19</text>
+  </g>
+
+  <!-- 02 · VERCEL -->
+  <g>
+    <rect x="470" y="352" width="330" height="252" rx="20" fill="url(#cardFill)" stroke="#ffffff" stroke-opacity="0.10"/>
+    <text x="496" y="392" fill="#8f9bbd" font-size="17" font-weight="700" letter-spacing="2.5">02 · VERCEL</text>
+    <text x="496" y="432" fill="#f3f6fc" font-size="29" font-weight="700">App Router + API route</text>
+    <rect x="496" y="452" width="286" height="34" rx="17" fill="#36ff9c" fill-opacity="0.08" stroke="#36ff9c" stroke-opacity="0.35"/>
+    <text x="512" y="475" fill="#7ff0b8" font-size="17" font-weight="600">POST /api/deliberate · nodejs</text>
+    <g fill="#c3cbe0" font-size="19">
+      <text x="496" y="524">Server route calls deliberate()</text>
+      <text x="496" y="556">in lib/agent.ts — orchestrates</text>
+      <text x="496" y="588">the whole council, key stays server-side.</text>
+    </g>
+  </g>
+
+  <!-- 03 · DASHSCOPE -->
+  <g>
+    <rect x="880" y="352" width="470" height="252" rx="20" fill="url(#cardFill)" stroke="#ffffff" stroke-opacity="0.10"/>
+    <text x="906" y="392" fill="#8f9bbd" font-size="17" font-weight="700" letter-spacing="2.5">03 · DASHSCOPE (QWEN CLOUD)</text>
+    <rect x="906" y="406" width="300" height="34" rx="17" fill="#a78bff" fill-opacity="0.10" stroke="#a78bff" stroke-opacity="0.4"/>
+    <circle cx="924" cy="423" r="5" fill="#a78bff"/>
+    <text x="938" y="429" fill="#cfc4f2" font-size="17" font-weight="600">qwen-max · OpenAI-compatible · temp 0</text>
+    <!-- three role chips -->
+    <g>
+      <rect x="906" y="458" width="132" height="64" rx="12" fill="#36ff9c" fill-opacity="0.06" stroke="#36ff9c" stroke-opacity="0.35"/>
+      <text x="922" y="484" fill="#36ff9c" font-size="19" font-weight="700">Proposer</text>
+      <text x="922" y="508" fill="#a9b4cf" font-size="15">argues for it</text>
+
+      <rect x="1048" y="458" width="132" height="64" rx="12" fill="#ff5d6c" fill-opacity="0.06" stroke="#ff5d6c" stroke-opacity="0.35"/>
+      <text x="1064" y="484" fill="#ff5d6c" font-size="19" font-weight="700">Skeptic</text>
+      <text x="1064" y="508" fill="#a9b4cf" font-size="15">hunts the risk</text>
+
+      <rect x="1190" y="458" width="136" height="64" rx="12" fill="#5fe6ff" fill-opacity="0.06" stroke="#5fe6ff" stroke-opacity="0.35"/>
+      <text x="1206" y="484" fill="#5fe6ff" font-size="19" font-weight="700">Referee</text>
+      <text x="1206" y="508" fill="#a9b4cf" font-size="15">decides last</text>
+    </g>
+    <text x="906" y="556" fill="#c3cbe0" font-size="18">Proposer + Skeptic in parallel → rebuttal on</text>
+    <text x="906" y="582" fill="#c3cbe0" font-size="18">disagreement → Referee on the full transcript</text>
+    <text x="906" y="583" fill="#7f8bab" font-size="16"> </text>
+  </g>
+
+  <!-- 04 · GUARDRAIL -->
+  <g>
+    <rect x="1430" y="352" width="400" height="252" rx="20" fill="url(#guardFill)" stroke="#f4cf52" stroke-opacity="0.5"/>
+    <text x="1456" y="392" fill="#d9be6a" font-size="17" font-weight="700" letter-spacing="2.5">04 · GUARDRAIL</text>
+    <rect x="1456" y="406" width="196" height="34" rx="17" fill="#f4cf52" fill-opacity="0.12" stroke="#f4cf52" stroke-opacity="0.5"/>
+    <text x="1472" y="429" fill="#f4cf52" font-size="17" font-weight="700">⚠ one-way ratchet</text>
+    <text x="1456" y="474" fill="#f3f6fc" font-size="26" font-weight="700">lib/policy.ts</text>
+    <g fill="#d7cfe4" font-size="18">
+      <text x="1456" y="512">Reads stakes + reversibility from the</text>
+      <text x="1456" y="538" font-weight="700" fill="#f4cf52">trusted action record<tspan fill="#d7cfe4" font-weight="400">, not the models.</tspan></text>
+      <text x="1456" y="574">Can only ever make the outcome safer;</text>
+      <text x="1456" y="600" fill="#d7cfe4">never upgrades a reject/escalate to execute.</text>
+    </g>
+  </g>
+
+  <!-- Row-1 arrows (browser -> vercel -> dashscope -> guardrail) -->
+  <line x1="390" y1="478" x2="466" y2="478" stroke="#8b7bd8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="800" y1="478" x2="876" y2="478" stroke="#8b7bd8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="1350" y1="478" x2="1426" y2="478" stroke="#8b7bd8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="815" y="466" fill="#7f8bab" font-size="15">HTTPS</text>
+  <text x="1358" y="466" fill="#7f8bab" font-size="15">votes + reasons</text>
+
+  <!-- ================= ROW 2: parallel MCP entry point ================= -->
+  <g>
+    <rect x="90" y="672" width="470" height="212" rx="20" fill="url(#mcpFill)" stroke="#5fe6ff" stroke-opacity="0.45"/>
+    <text x="116" y="712" fill="#7fd6e8" font-size="17" font-weight="700" letter-spacing="2.5">PARALLEL ENTRY · MCP</text>
+    <text x="116" y="752" fill="#f3f6fc" font-size="27" font-weight="700">External MCP client</text>
+    <g fill="#c3cbe0" font-size="19">
+      <text x="116" y="792">Claude Desktop · Cursor · another agent</text>
+      <text x="116" y="826">calls convene_council / list_demo_actions</text>
+      <text x="116" y="860" fill="#8f9bbd" font-size="16">mcp-server.ts · npm run mcp</text>
+    </g>
+  </g>
+
+  <!-- stdio pill between MCP client and the shared orchestrator -->
+  <line x1="560" y1="778" x2="700" y2="778" stroke="#5fe6ff" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+  <rect x="576" y="738" width="108" height="34" rx="17" fill="#5fe6ff" fill-opacity="0.10" stroke="#5fe6ff" stroke-opacity="0.4"/>
+  <text x="596" y="761" fill="#7fd6e8" font-size="17" font-weight="600">stdio</text>
+
+  <!-- shared orchestrator node -->
+  <g>
+    <rect x="700" y="702" width="360" height="152" rx="18" fill="url(#cardFill)" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="726" y="742" fill="#8f9bbd" font-size="17" font-weight="700" letter-spacing="2.5">SHARED CORE</text>
+    <text x="726" y="782" fill="#f3f6fc" font-size="26" font-weight="700">deliberate() in lib/agent.ts</text>
+    <text x="726" y="818" fill="#c3cbe0" font-size="18">The same council + the same guardrail run</text>
+    <text x="726" y="844" fill="#c3cbe0" font-size="18">whether the caller is the UI or an agent.</text>
+  </g>
+
+  <!-- MCP core reuses DashScope + Guardrail: dashed connectors upward -->
+  <path d="M880 702 L880 620" stroke="#5fe6ff" stroke-width="2" stroke-dasharray="6 6" fill="none" marker-end="url(#arrowCyan)"/>
+  <path d="M1060 762 C 1240 762, 1320 700, 1430 560" stroke="#5fe6ff" stroke-width="2" stroke-dasharray="6 6" fill="none" marker-end="url(#arrowCyan)"/>
+  <text x="1090" y="690" fill="#7fd6e8" font-size="15">restraint travels with the council, not the caller</text>
+
+  <!-- ================= OUTCOMES (guardrail -> UI) ================= -->
+  <g>
+    <text x="1456" y="672" fill="#8f9bbd" font-size="17" font-weight="700" letter-spacing="2.5">OUTCOME → BACK TO THE UI</text>
+    <!-- execute -->
+    <rect x="1430" y="690" width="400" height="42" rx="12" fill="#ffffff" fill-opacity="0.03" stroke="#ffffff" stroke-opacity="0.08"/>
+    <circle cx="1456" cy="711" r="6" fill="#36ff9c"/>
+    <text x="1476" y="717" fill="#eef2fa" font-size="19" font-weight="700">Execute<tspan fill="#9aa7c4" font-weight="400" font-size="17">  · unanimous &amp; safe</tspan></text>
+    <!-- reject -->
+    <rect x="1430" y="740" width="400" height="42" rx="12" fill="#ffffff" fill-opacity="0.03" stroke="#ffffff" stroke-opacity="0.08"/>
+    <circle cx="1456" cy="761" r="6" fill="#ff5d6c"/>
+    <text x="1476" y="767" fill="#eef2fa" font-size="19" font-weight="700">Reject<tspan fill="#9aa7c4" font-weight="400" font-size="17">  · council auto-denies</tspan></text>
+    <!-- escalate -->
+    <rect x="1430" y="790" width="400" height="42" rx="12" fill="#ffffff" fill-opacity="0.03" stroke="#ffffff" stroke-opacity="0.08"/>
+    <circle cx="1456" cy="811" r="6" fill="#f4cf52"/>
+    <text x="1476" y="817" fill="#eef2fa" font-size="19" font-weight="700">Escalate<tspan fill="#9aa7c4" font-weight="400" font-size="17">  · split vote → a human</tspan></text>
+    <!-- held back -->
+    <rect x="1430" y="840" width="400" height="42" rx="12" fill="#ffffff" fill-opacity="0.03" stroke="#ffffff" stroke-opacity="0.08"/>
+    <circle cx="1456" cy="861" r="6" fill="#5fe6ff"/>
+    <text x="1476" y="867" fill="#eef2fa" font-size="19" font-weight="700">Held back<tspan fill="#9aa7c4" font-weight="400" font-size="17">  · unanimous but irreversible</tspan></text>
+  </g>
+
+  <!-- guardrail -> outcomes arrow -->
+  <path d="M1630 604 L1630 686" stroke="#8b7bd8" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- outcome -> back to UI (long return arrow along the bottom of row 1 to browser) -->
+  <path d="M1430 711 C 1150 640, 700 640, 240 630 L240 610" stroke="#8b7bd8" stroke-width="2" stroke-opacity="0.55" stroke-dasharray="2 7" fill="none" marker-end="url(#arrow)"/>
+  <text x="700" y="628" fill="#7f8bab" font-size="15" text-anchor="middle">decision rendered back in the browser</text>
+
+  <!-- ================= footer ================= -->
+  <line x1="90" y1="960" x2="1830" y2="960" stroke="#ffffff" stroke-opacity="0.08"/>
+  <text x="90" y="1002" fill="#9aa7c4" font-size="19">
+    <tspan fill="#c9d2e6" font-weight="700">Stateless &amp; key-free-safe:</tspan> no database, nothing persisted; DashScope down → the deterministic fallback runs.
+  </text>
+  <text x="1830" y="1002" fill="#6f7a97" font-size="18" text-anchor="end">github.com/yanzaaa/quorum · built solo with Claude Code</text>
+</svg>

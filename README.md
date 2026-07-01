@@ -6,7 +6,11 @@ Most "multi-agent" demos let a swarm of agents talk themselves into an action. T
 
 **Quorum is a council of Qwen agents that deliberates every consequential action, and a deterministic guardrail that refuses to execute without consensus and refuses to let any consensus authorize the irreversible.** It executes the clearly-safe, auto-denies the clearly-bad, and escalates the rest to a human.
 
-![Quorum architecture](public/architecture.png)
+![Quorum decision logic](public/architecture.png)
+
+*Above: the **decision logic** — how three votes become one guarded outcome. Below: the **system architecture** — how a request actually flows through the stack.*
+
+![Quorum system architecture](public/architecture-technical.svg)
 
 ## What it does
 
@@ -22,9 +26,9 @@ Then a **deterministic quorum guardrail** turns the three votes into one outcome
 - **reject** — the council agrees it should not happen (auto-denied, no human needed),
 - **escalate** — the agents disagree, or the action is high-stakes / irreversible and no vote can authorize it.
 
-A human only ever sees the escalation queue.
+Only the escalations ever reach a person — the rest of the queue resolves without waiting on one.
 
-## The differentiator: consensus is necessary, never sufficient
+## Why consensus is never sufficient
 
 The votes are advisory. Trust comes from a **deterministic guardrail** (`lib/policy.ts` + `applyQuorum` in `lib/agent.ts`) layered on top of the council. It is a **one-way ratchet**: it can only ever make the outcome *safer*.
 
@@ -41,7 +45,7 @@ Stakes and reversibility are read from the **trusted action record**, not from a
 Two things make the *multi-agent* layer do real work, not just dress up a guardrail:
 
 - **Deliberation, not arithmetic.** The Proposer and Skeptic argue independently; the **Referee then votes *after* reading both of their arguments** (`askReferee` in `lib/agent.ts`). The deciding vote is a function of the council's exchange, so the agents can move the outcome — e.g. a low-stakes, reversible $30 refund that a stakes-only guardrail would wave straight through is **caught by the Skeptic** once it sees an 11-refunds-this-month abuse pattern.
-- **A single-agent baseline runs alongside every action.** One lone, oversight-free Qwen agent decides whether it would just execute the action. The headline metric is the **gain over that baseline**: *"a lone agent would have executed N of these actions on its own; the council stopped every one."* The clearest case: a lone agent will fire off a fully-approved but **irreversible** $12k payment that no human signed off on *pulling the trigger* for — the council + guardrail hold it back. (Qwen is a strong model, so a single agent already catches obvious fraud on its own; the council's measurable edge shows up precisely on the irreversible and the contested, which is where it should.)
+- **A single-agent baseline runs alongside every action, and the gain is measured.** One lone, oversight-free Qwen agent decides whether it would just execute the action. The gain over that baseline is committed as a reproducible artifact — [`public/benchmark.json`](public/benchmark.json), regenerated with `npx tsx scripts/aggregate.ts`: **on the 7-action demo queue, the lone agent executes 6 of 7 — including the $50,000 invoice-fraud wire and the irreversible $12,000 payment — while the council executes 2, auto-denies 3, and escalates 2, stopping all 4 of the lone agent's unsafe executions ($62,030 of priced exposure, plus an unpriced 40% recurring discount) with a human touching only 2 of 7 actions.** (Qwen is a strong model, so a single agent already balks at outright data destruction on its own; the council's measurable edge shows up precisely on the fraudulent, the contested, and the irreversible, which is where it should.) That gain is a concrete **efficiency win, not just a safety stat**: each stopped execution is a mistaken wire, a rewarded abuse pattern, or an unauthorized discount the team would otherwise have to detect, reverse, and reconcile after the fact — cost and rework the council avoids up front, at a price of 4–5 qwen-max calls per verdict vs. the lone agent's 1.
 
 ## How it's built
 
@@ -49,7 +53,7 @@ Two things make the *multi-agent* layer do real work, not just dress up a guardr
 - **A real society of agents:** the Proposer and Skeptic vote independently, then the Referee casts the deciding vote *after weighing both arguments* — a deliberation, not a parallel poll. A separate lone-agent baseline runs alongside for comparison.
 - **The quorum guardrail** (`lib/policy.ts`) is the deterministic safety net that guarantees the invariants above.
 - **Next.js (App Router) + TypeScript + Tailwind**, deployed on Vercel. The UI shows every agent's vote, confidence, and reasoning, plus the held-back escalations.
-- **A key-free deterministic fallback** runs the same deliberation logic so the app never crashes before the Qwen credits land or if the API is down.
+- **No key, no crash:** without a `DASHSCOPE_API_KEY` the same deliberation logic runs on a deterministic engine, so the demo keeps working even when the API is unreachable.
 
 ## Tests
 
@@ -68,11 +72,11 @@ The point: an *agent society* can consult Quorum before acting. Another agent su
 
 ```bash
 npm install
-cp .env.example .env     # add your Qwen Cloud (DASHSCOPE) API key
+cp .env.example .env     # DASHSCOPE_API_KEY from the Alibaba Cloud console
 npm run dev              # http://localhost:3000
 ```
 
-Click **Run the council on the queue**. With a valid key it convenes three live Qwen agents per action; without one it runs the deterministic fallback so you can still see the full flow.
+Hit **Run the council on the queue** and watch the deliberations land. A valid key convenes three live Qwen agents per action; with no key the deterministic engine plays out the same votes, rebuttals, and hold-backs.
 
 ## What's next
 

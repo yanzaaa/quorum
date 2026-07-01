@@ -286,6 +286,25 @@ export default function Page() {
 
   return (
     <main className="max-w-[1120px] mx-auto px-6 py-20 md:py-28">
+      {/* Live-mode indicator (top corner): green when the council ran on real Qwen Cloud calls,
+          amber when it fell back to the key-free deterministic path. Reads on a screen recording. */}
+      <AnimatePresence>
+        {engine && (
+          <motion.div
+            key={engine}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.4, ease: EASE }}
+            className={`qr-mode ${engine === "qwen" ? "qr-mode-live" : "qr-mode-fallback"}`}
+            title={engine === "qwen" ? "Deliberated by live qwen-max calls on Qwen Cloud" : "Qwen key absent or API unavailable — running the deterministic fallback"}
+          >
+            <span className="qr-mode-dot" />
+            {engine === "qwen" ? "LIVE · Qwen Cloud" : "FALLBACK MODE"}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Hero */}
       <div className="relative">
         <div
